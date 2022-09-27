@@ -4,7 +4,6 @@ library(tidymodels)
 library(bonsai)
 library(rules)
 library(doMC)
-library(here)
 
 # ------------------------------------------------------------------------------
 
@@ -126,14 +125,29 @@ for (model in grep("(pca)|(pls)", barley_set$wflow_id, value = TRUE)) {
 
 barley_res <-
   barley_set %>%
-  filter(grepl("bart", wflow_id)) %>% 
-  workflow_map(resamples = barley_rs, grid = 50, seed = 4580, control = ctrl_grd)
+  workflow_map(
+    resamples = barley_rs,
+    grid = 25,
+    seed = 4580,
+    control = ctrl_grd,
+    verbose = TRUE
+  )
 
 # ------------------------------------------------------------------------------
+# Save entries in the workflow set separately to reduce the size of the RData file
+
+for (i in seq_along(barley_res$wflow_id)) {
+  obj_nm <- paste0("barley_", barley_res$wflow_id[i])
+  file_nm <- file.path("example_analyses", paste0(obj_nm, ".RData"))
+  assign(obj_nm, value = barley_res %>% dplyr::slice(i))
+  save(list = obj_nm, file = file_nm, compress = "xz", compression_level = 9)
+}
 
 save(
-  list = ls(pattern = "(_res$)|(_train$)|(_test$)"),
-  file = file.path("example_analyses", "barley_res.RData")
+  list = ls(pattern = "(_train$)|(_test$)"),
+  file = file.path("example_analyses", "barley_data.RData"), 
+  compress = "xz", 
+  compression_level = 9
 )
   
 # ------------------------------------------------------------------------------
