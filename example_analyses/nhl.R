@@ -117,6 +117,13 @@ glmn_spline_res <-
     grid = glmn_grid
   )
 
+save(
+  glmn_spline_res,
+  file = file.path("example_analyses", "nhl_glmnet.RData"),
+  compress = "xz",
+  compression_level = 9
+)
+
 # ------------------------------------------------------------------------------
 
 gam_f <- 
@@ -136,6 +143,13 @@ gam_workflow <-
 gam_res <-
   tune_grid(gam_workflow, resamples = nhl_val_split, control = grid_ctrl)
 
+save(
+  gam_res,
+  file = file.path("example_analyses", "nhl_gam.RData"),
+  compress = "xz",
+  compression_level = 9
+)
+
 # ------------------------------------------------------------------------------
 
 fda_gcv_res <-
@@ -149,6 +163,13 @@ fda_manual_res <-
   discrim_flexible(prod_degree = tune(), num_terms = tune(), prune_method = "none") %>%
   tune_grid(effects_encode_recipe, resamples = nhl_val_split, grid = fda_grid,
             control = grid_ctrl)
+
+save(
+  fda_manual_res,
+  file = file.path("example_analyses", "nhl_fda.RData"),
+  compress = "xz",
+  compression_level = 9
+)
 
 # ------------------------------------------------------------------------------
 
@@ -166,9 +187,16 @@ svm_res <-
   tune_grid(
     svm_workflow,
     resamples = nhl_val_split,
-    grid = 50,
+    grid = 25,
     control = grid_ctrl
   )
+
+save(
+  svm_res,
+  file = file.path("example_analyses", "nhl_svm.RData"),
+  compress = "xz",
+  compression_level = 9
+)
 
 # ------------------------------------------------------------------------------
 
@@ -187,9 +215,16 @@ bart_res <-
   tune_grid(
     bart_workflow,
     resamples = nhl_val_split,
-    grid = 50,
+    grid = 25,
     control = grid_ctrl
   )
+
+save(
+  bart_res,
+  file = file.path("example_analyses", "nhl_bart.RData"),
+  compress = "xz",
+  compression_level = 9
+)
 
 # ------------------------------------------------------------------------------
 
@@ -214,16 +249,17 @@ lgb_res <-
   lgb_workflow %>%
   tune_grid(
     resamples = nhl_val_split,
-    grid = 50,
+    grid = 25,
     param_info = lgb_param,
     control = grid_ctrl
   )
 
+save(lgb_res, file = file.path("example_analyses", "nhl_lgb.RData"), compress = "xz", compression_level = 9)
 
 # ------------------------------------------------------------------------------
 
 save(
-  list = ls(pattern = "(_res$)|(_train$)|(_test$)"),
+  list = ls(pattern = "(_train$)|(_test$)"),
   file = file.path("example_analyses", "nhl_res.RData")
 )
 
