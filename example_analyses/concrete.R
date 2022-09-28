@@ -2,6 +2,7 @@ library(parallelly)
 library(ongoal)
 library(tidymodels)
 library(bonsai)
+library(baguette)
 library(rules)
 library(doMC)
 
@@ -126,6 +127,7 @@ mlp_spec <-
     penalty = tune(),
     epochs =tune()
   ) %>%
+  set_engine("nnet", MaxNWts = 2000) %>% 
   set_mode('regression')
 
 mlp_param <- 
@@ -201,8 +203,8 @@ gam_res <-
   gam_wflow %>%
   tune_grid(
     resamples = conc_rs,
-    grid = 50,
-    control = control_grid(parallel_over = "everything", save_workflow = TRUE)
+    grid = 25,
+    control = grid_ctrl
   )
 
 conc_res <-
@@ -210,17 +212,27 @@ conc_res <-
   workflow_map(
     verbose = FALSE,
     seed = 1704,
-    grid = 50,
+    grid = 25,
     resamples = conc_rs,
-    control = control_grid(parallel_over = "everything")
+    control = grid_ctrl
   ) %>% 
   bind_rows(as_workflow_set(plain_gam = gam_res))
 
 # ------------------------------------------------------------------------------
+# Save entries in the workflow set separately to reduce the size of the RData file
+
+for (i in seq_along(conc_res$wflow_id)) {
+  obj_nm <- paste0("conc_", conc_res$wflow_id[i])
+  file_nm <- file.path("example_analyses", paste0(obj_nm, ".RData"))
+  assign(obj_nm, value = conc_res %>% dplyr::slice(i))
+  save(list = obj_nm, file = file_nm, compress = "xz", compression_level = 9)
+}
 
 save(
-  list = ls(pattern = "(_res$)|(_train$)|(_test$)"),
-  file = file.path("example_analyses", "concrete_res.RData")
+  list = ls(pattern = "(_train$)|(_test$)"),
+  file = file.path("example_analyses", "concrete_res.RData"), 
+  compress = "xz", 
+  compression_level = 9
 )
 
 # ------------------------------------------------------------------------------
