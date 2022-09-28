@@ -71,7 +71,7 @@ glmnet_param <-
 set.seed(23892)
 glmnet_grid <- 
   glmnet_param %>% 
-  grid_max_entropy(size = 50)
+  grid_max_entropy(size = 25)
 
 set.seed(9624)
 glmnet_res <-
@@ -82,6 +82,13 @@ glmnet_res <-
     param_info = glmnet_param,
     control = ctrl_grid
   ) 
+
+save(
+  glmnet_res,
+  file = file.path("example_analyses", "hpc_glmnet.RData"),
+  compress = "xz",
+  compression_level = 9
+)
 
 # ------------------------------------------------------------------------------
 
@@ -102,6 +109,13 @@ cart_bag_res <-
     resamples = hpc_rs,
     control = ctrl_grid
   ) 
+
+save(
+  cart_bag_res,
+  file = file.path("example_analyses", "hpc_cart_bag.RData"),
+  compress = "xz",
+  compression_level = 9
+)
 
 # ------------------------------------------------------------------------------
 
@@ -129,16 +143,22 @@ fda_res <-
     control = ctrl_grid
   ) 
 
+save(
+  fda_res,
+  file = file.path("example_analyses", "hpc_fda.RData"),
+  compress = "xz",
+  compression_level = 9
+)
+
 # ------------------------------------------------------------------------------
 
 nnet_spec <-
   mlp(
     hidden_units = tune(),
     penalty = tune(),
-    epochs = 2000,
-    activation = tune()
+    epochs = tune()
   ) %>%
-  set_engine("brulee", rate_schedule = tune(), mixture = tune(), stop_iter = 20) %>%
+  set_engine("nnet", MaxNWts = 5000) %>%
   set_mode("classification")
 
 nnet_workflow <-
@@ -158,10 +178,17 @@ nnet_res <-
   tune_grid(
     nnet_workflow,
     resamples = hpc_rs,
-    grid = 50,
+    grid = 25,
     param_info = nnet_param,
     control = ctrl_grid
   )
+
+save(
+  nnet_res,
+  file = file.path("example_analyses", "hpc_nnet.RData"),
+  compress = "xz",
+  compression_level = 9
+)
 
 # ------------------------------------------------------------------------------
 
@@ -183,10 +210,17 @@ svmp_res <-
   tune_grid(
     svmp_workflow,
     resamples = hpc_rs,
-    grid = 50,
+    grid = 25,
     param_info = svmp_param,
     control = ctrl_grid
   ) 
+
+save(
+  svmp_res,
+  file = file.path("example_analyses", "hpc_svm.RData"),
+  compress = "xz",
+  compression_level = 9
+)
 
 # ------------------------------------------------------------------------------
 
@@ -211,15 +245,24 @@ xgb_res <-
   tune_grid(
     xgb_workflow,
     resamples = hpc_rs,
-    grid = 50,
+    grid = 25,
     control = ctrl_grid
   ) 
+
+save(
+  xgb_res,
+  file = file.path("example_analyses", "hpc_xgb.RData"),
+  compress = "xz",
+  compression_level = 9
+)
 
 # ------------------------------------------------------------------------------
 
 save(
-  list = ls(pattern = "(_res$)|(_train$)|(_test$)"),
-  file = file.path("example_analyses", "hpc_res.RData")
+  list = ls(pattern = "(_train$)|(_test$)"),
+  file = file.path("example_analyses", "hpc_res.RData"), 
+  compress = "xz", 
+  compression_level = 9
 )
 
 # ------------------------------------------------------------------------------
