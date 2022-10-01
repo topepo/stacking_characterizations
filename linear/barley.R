@@ -15,12 +15,13 @@ registerDoMC(cores = parallelly::availableCores())
 # ------------------------------------------------------------------------------
 # Recollect data into a workflow set then a data stack
 
-rdata_files <- list.files("example_analyses", pattern = "barley_")
-rdata_files <- rdata_files[rdata_files != "barley_data.RData"]
+rdata_files <- list.files("example_analyses", pattern = "barley_", full.names = TRUE, )
+rdata_files <- rdata_files[!grepl("barley_data", rdata_files)]
+rdata_files <- rdata_files[grepl("RData$", rdata_files)]
 
 return_row <- function(x) {
-  load(file.path("example_analyses", x))
-  get(gsub("\\.RData", "", x))
+  load(x)
+  get(gsub("\\.RData", "", basename(x)))
 }
 
 barley_res <- map_dfr(rdata_files, return_row)
@@ -102,5 +103,16 @@ predict(barley_poss_neg_stack, barley_test) %>%
   bind_cols(barley_test) %>% 
   rmse(barley, .pred)
 
+# Single best fit has
+# A tibble: 1 × 3
+#>     .metric .estimator .estimate
+#>     <chr>   <chr>          <dbl>
+#>   1 rmse    standard        2.45
 
-# TODO augment method, signif on labs(title)
+
+# ------------------------------------------------------------------------------
+
+sessioninfo::session_info()
+
+q(save = "no")
+
