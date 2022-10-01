@@ -68,6 +68,8 @@ barley_best_res <-
   barley_res %>% 
   extract_workflow_set_result(id = barley_best$wflow_id)
 
+# autoplot(barley_best_res, metric = "rmse")
+
 barley_best_config <-
   barley_best_res %>% 
   select_best(metric = "rmse")
