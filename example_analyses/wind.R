@@ -22,7 +22,6 @@ wind_turbine <-
   wind_turbine_raw %>%
   rename(capacity = total_project_capacity_mw) %>%
   mutate(
-    commissioning_date = as.numeric(commissioning_date),
     turbine_number_in_project = gsub("[[:digit:]]/", "", turbine_number_in_project),
     turbine_number_in_project = as.numeric(turbine_number_in_project),
     across(where(is.character), as.factor)
@@ -50,10 +49,16 @@ grid_ctrl <-
 
 base_rec <- 
   recipe(capacity ~ ., data = wind_train) %>% 
-  step_lencode_mixed(model, manufacturer, outcome = vars(capacity)) 
+  step_lencode_mixed(model, manufacturer, outcome = vars(capacity)) %>% 
+  step_impute_knn(turbine_rated_capacity_k_w)
 
 dummy_rec <- 
   base_rec %>% 
+  step_dummy_extract(
+    commissioning_date,
+    sep = "/",
+    naming = function(var, lvl, ordinal = FALSE, sep = "_") paste0("year_", lvl)
+  ) %>%   
   step_dummy(all_nominal_predictors()) %>% 
   step_zv(all_predictors()) %>% 
   step_normalize(all_numeric_predictors())
@@ -63,28 +68,6 @@ dummy_rec <-
 bag_tree_rpart_spec <-
   bag_tree() %>%
   set_engine('rpart') %>%
-  set_mode('regression')
-
-bart_dparts_spec <-
-  parsnip::bart(
-    prior_terminal_node_coef = tune(),
-    prior_terminal_node_expo = tune(),
-    prior_outcome_range = tune(),
-    trees = 500
-  ) %>%
-  set_mode("regression")
-
-boost_tree_xgboost_spec <-
-  boost_tree(
-    tree_depth = tune(),
-    trees = tune(),
-    learn_rate = tune(),
-    min_n = tune(),
-    loss_reduction = tune(),
-    sample_size = tune(),
-    stop_iter = tune()
-  ) %>% 
-  set_engine('xgboost') %>%
   set_mode('regression')
 
 boost_tree_lgb_spec <-
@@ -127,7 +110,7 @@ mlp_spec <-
     penalty = tune(),
     epochs = tune()
   ) %>%
-  set_engine("nnet", MaxNWts = 2000) %>% 
+  set_engine("nnet", MaxNWts = 10000) %>% 
   set_mode('regression')
 
 mlp_param <- 
@@ -155,8 +138,6 @@ svm_rbf_kernlab_spec <-
 models_1 <- 
   list(
     bag_tree = bag_tree_rpart_spec,
-    bart = bart_dparts_spec,
-    xgboost = boost_tree_xgboost_spec,
     lightgbm = boost_tree_lgb_spec,
     cubist_rules = cubist_rules_Cubist_spec,
     decision_tree = decision_tree_rpart_spec,
@@ -191,7 +172,7 @@ wind_wflow_set <-
 wind_res <-
   wind_wflow_set %>%
   workflow_map(
-    verbose = FALSE,
+    verbose = TRUE,
     seed = 1704,
     grid = 25,
     resamples = wind_rs,
