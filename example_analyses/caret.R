@@ -1,6 +1,7 @@
 library(parallelly)
 library(tidymodels)
 library(embed)
+library(discrim)
 library(bonsai)
 library(baguette)
 library(rules)
@@ -15,7 +16,7 @@ registerDoMC(cores = parallelly::availableCores())
 
 # ------------------------------------------------------------------------------
 
-n <- 500
+n <- 50000
 
 set.seed(1)
 class_sim_caret <- 
@@ -26,7 +27,7 @@ class_sim_caret <-
 
 
 set.seed(1701)
-caret_split <- initial_split(caret_turbine, strata = class)
+caret_split <- initial_split(class_sim_caret, strata = class)
 caret_train <- training(caret_split)
 caret_test  <- testing(caret_split)
 
@@ -74,6 +75,10 @@ resamp_ctrl <-
 coef_path_values <- 10^seq(-2, 0, length.out = 30)
 glmn_grid <- crossing(penalty = coef_path_values, mixture = (0:5) / 5)
 
+glmn_spec <- 
+  logistic_reg(penalty = tune(), mixture = tune()) %>% 
+  set_engine("glmnet", path_values = coef_path_values)
+
 glmn_spline_wflow <- 
   workflow() %>% 
   add_model(glmn_spec) %>% 
@@ -97,16 +102,11 @@ save(
 
 # ------------------------------------------------------------------------------
 
-fda_gcv_res <-
-  discrim_flexible(prod_degree = tune()) %>%
-  tune_grid(effects_encode_recipe, resamples = caret_rs, grid = 2,
-            control = grid_ctrl)
-
 fda_grid <- crossing(prod_degree = 1:2, num_terms = 2:25)
 
 fda_manual_res <-
   discrim_flexible(prod_degree = tune(), num_terms = tune(), prune_method = "none") %>%
-  tune_grid(effects_encode_recipe, resamples = caret_rs, grid = fda_grid,
+  tune_grid(basic_recipe, resamples = caret_rs, grid = fda_grid,
             control = grid_ctrl)
 
 save(
@@ -124,7 +124,7 @@ svm_spec <-
 
 svm_workflow <-
   workflow() %>%
-  add_recipe(normalized_recipe) %>%
+  add_recipe(basic_recipe) %>%
   add_model(svm_spec)
 
 set.seed(9264)
@@ -156,12 +156,12 @@ nnet_spec <-
 
 nnet_param <- 
   nnet_spec %>% 
-  parameters() %>% 
+  extract_parameter_set_dials() %>% 
   update(hidden_units = hidden_units(c(2, 25)))
 
 nnet_workflow <-
   workflow() %>%
-  add_recipe(normalized_recipe) %>%
+  add_recipe(basic_recipe) %>%
   add_model(nnet_spec)
 
 set.seed(9264)
@@ -193,7 +193,7 @@ kknn_spec <-
 
 knn_workflow <-
   workflow() %>%
-  add_recipe(normalized_recipe) %>%
+  add_recipe(basic_recipe) %>%
   add_model(knn_spec)
 
 set.seed(9264)
