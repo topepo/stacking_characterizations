@@ -124,14 +124,14 @@ kc_res <-
 
 for (i in seq_along(kc_res$wflow_id)) {
   obj_nm <- paste0("kc_", kc_res$wflow_id[i])
-  file_nm <- file.path("example_analyses", paste0(obj_nm, ".RData"))
+  file_nm <- file.path("example_analyses", "kc", "base_fits", paste0(obj_nm, ".RData"))
   assign(obj_nm, value = kc_res %>% dplyr::slice(i))
   save(list = obj_nm, file = file_nm, compress = "xz", compression_level = 9)
 }
 
 save(
   list = ls(pattern = "(_train$)|(_test$)"),
-  file = file.path("example_analyses", "kc_data.RData"),
+  file = file.path("example_analyses", "kc", "kc_data.RData"),
   compress = "xz",
   compression_level = 9
 )

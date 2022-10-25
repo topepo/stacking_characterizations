@@ -85,7 +85,7 @@ glmnet_res <-
 
 save(
   glmnet_res,
-  file = file.path("example_analyses", "hpc_glmnet.RData"),
+  file = file.path("example_analyses", "hpc", "base_fits", "hpc_glmnet.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -112,7 +112,7 @@ cart_bag_res <-
 
 save(
   cart_bag_res,
-  file = file.path("example_analyses", "hpc_cart_bag.RData"),
+  file = file.path("example_analyses", "hpc", "base_fits", "hpc_cart_bag.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -145,7 +145,7 @@ fda_res <-
 
 save(
   fda_res,
-  file = file.path("example_analyses", "hpc_fda.RData"),
+  file = file.path("example_analyses", "hpc", "base_fits", "hpc_fda.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -185,7 +185,7 @@ nnet_res <-
 
 save(
   nnet_res,
-  file = file.path("example_analyses", "hpc_nnet.RData"),
+  file = file.path("example_analyses", "hpc", "base_fits", "hpc_nnet.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -217,7 +217,7 @@ svmp_res <-
 
 save(
   svmp_res,
-  file = file.path("example_analyses", "hpc_svm.RData"),
+  file = file.path("example_analyses", "hpc", "base_fits", "hpc_svm.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -251,7 +251,7 @@ xgb_res <-
 
 save(
   xgb_res,
-  file = file.path("example_analyses", "hpc_xgb.RData"),
+  file = file.path("example_analyses", "hpc", "base_fits", "hpc_xgb.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -260,7 +260,7 @@ save(
 
 save(
   list = ls(pattern = "(_train$)|(_test$)"),
-  file = file.path("example_analyses", "hpc_res.RData"), 
+  file = file.path("example_analyses", "hpc", "hpc_data.RData"), 
   compress = "xz", 
   compression_level = 9
 )

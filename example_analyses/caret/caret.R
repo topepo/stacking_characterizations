@@ -95,7 +95,7 @@ glmn_spline_res <-
 
 save(
   glmn_spline_res,
-  file = file.path("example_analyses", "caret_glmnet.RData"),
+  file = file.path("example_analyses", "caret", "base_fits", "caret_glmnet.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -111,7 +111,7 @@ fda_manual_res <-
 
 save(
   fda_manual_res,
-  file = file.path("example_analyses", "caret_fda.RData"),
+  file = file.path("example_analyses", "caret", "base_fits", "caret_fda.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -138,7 +138,7 @@ svm_res <-
 
 save(
   svm_res,
-  file = file.path("example_analyses", "caret_svm.RData"),
+  file = file.path("example_analyses", "caret", "base_fits", "caret_svm.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -176,7 +176,7 @@ nnet_res <-
 
 save(
   nnet_res,
-  file = file.path("example_analyses", "caret_nnet.RData"),
+  file = file.path("example_analyses", "caret", "base_fits", "caret_nnet.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -207,7 +207,7 @@ knn_res <-
 
 save(
   knn_res,
-  file = file.path("example_analyses", "caret_knn.RData"),
+  file = file.path("example_analyses", "caret", "base_fits", "caret_knn.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -235,7 +235,7 @@ bart_res <-
 
 save(
   bart_res,
-  file = file.path("example_analyses", "caret_bart.RData"),
+  file = file.path("example_analyses", "caret", "base_fits", "caret_bart.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -268,13 +268,13 @@ lgb_res <-
     control = grid_ctrl
   )
 
-save(lgb_res, file = file.path("example_analyses", "caret_lgb.RData"), compress = "xz", compression_level = 9)
+save(lgb_res, file = file.path("example_analyses", "caret", "base_fits", "caret_lgb.RData"), compress = "xz", compression_level = 9)
 
 # ------------------------------------------------------------------------------
 
 save(
   list = ls(pattern = "(_train$)|(_test$)"),
-  file = file.path("example_analyses", "caret_data.RData")
+  file = file.path("example_analyses", "caret", "caret_data.RData")
 )
 
 # ------------------------------------------------------------------------------

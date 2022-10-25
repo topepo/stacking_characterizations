@@ -26,3 +26,5 @@ The structure of each sub-folder in `example_analyses`, for a dataset called `da
       - `stack_preproc1_model1.Rdata`: Metrics on the model stacking process from `stack_preproc1_model1.R`.
       - `stack_preproc1_model2.Rdata`
       - ...
+
+Many `.R` files have analogous `.Rout` files, if ran in batch.

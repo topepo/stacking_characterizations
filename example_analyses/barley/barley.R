@@ -138,14 +138,14 @@ barley_res <-
 
 for (i in seq_along(barley_res$wflow_id)) {
   obj_nm <- paste0("barley_", barley_res$wflow_id[i])
-  file_nm <- file.path("example_analyses", paste0(obj_nm, ".RData"))
+  file_nm <- file.path("example_analyses", "barley", "base_fits", paste0(obj_nm, ".RData"))
   assign(obj_nm, value = barley_res %>% dplyr::slice(i))
   save(list = obj_nm, file = file_nm, compress = "xz", compression_level = 9)
 }
 
 save(
   list = ls(pattern = "(_train$)|(_test$)"),
-  file = file.path("example_analyses", "barley_data.RData"), 
+  file = file.path("example_analyses", "barley", "barley_data.RData"), 
   compress = "xz", 
   compression_level = 9
 )

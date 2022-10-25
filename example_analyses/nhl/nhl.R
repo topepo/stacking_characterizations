@@ -1,10 +1,9 @@
 library(parallelly)
+library(ongoal)
 library(tidymodels)
 library(embed)
-library(discrim)
 library(bonsai)
-library(baguette)
-library(rules)
+library(discrim)
 library(doMC)
 
 # ------------------------------------------------------------------------------
@@ -16,35 +15,51 @@ registerDoMC(cores = parallelly::availableCores())
 
 # ------------------------------------------------------------------------------
 
-n <- 50000
-
-set.seed(1)
-class_sim_caret <- 
-  sim_classification(n, num_linear = 25, intercept = -20) %>% 
-  bind_cols(
-    sim_noise(n, num_vars = 50, cov_type = "toeplitz", cov_param = 1 / 2)
-  )
-
-
-set.seed(1701)
-caret_rare_split <- initial_split(class_sim_caret, strata = class)
-caret_rare_train <- training(caret_rare_split)
-caret_rare_test  <- testing(caret_rare_split)
-
-set.seed(1702) 
-caret_rare_rs <- vfold_cv(caret_rare_train, strata = class)
+pittsburgh <-
+  on_goal %>%
+  arrange(game_id, event_idx) %>%
+  select(-game_id, -event_idx, -date_time, -event, -distance)
 
 # ------------------------------------------------------------------------------
 
-grid_ctrl <-
-  control_grid(
-    parallel_over = "everything",
-    save_pred = TRUE,
-    save_workflow = TRUE
-  )
+set.seed(1)
+nhl_split <- initial_time_split(pittsburgh, prop = 3/4)
+nhl_not_test <- training(nhl_split)
+nhl_test <- testing(nhl_split)
+
+set.seed(2)
+nhl_val_split <- validation_split(nhl_not_test, prop = 9/10)
+nhl_train <- training(nhl_val_split$splits[[1]])
+
+# ------------------------------------------------------------------------------
 
 basic_recipe <-
-  recipe(class ~ ., data = caret_rare_train) %>%
+  recipe(formula = on_goal ~ ., data = nhl_train)
+
+effects_encode_recipe <-
+  basic_recipe %>%
+  step_lencode_mixed(shooter, goaltender, shooter_nationality, outcome = vars(on_goal))
+
+effects_and_dummy_recipe <-
+  effects_encode_recipe %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors()) %>%
+  step_lincomb(all_numeric_predictors())
+
+all_dummy_recipe <-
+  basic_recipe %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors()) %>%
+  step_lincomb(all_numeric_predictors())
+
+spline_recipe <-
+  effects_and_dummy_recipe %>%
+  step_ns(angle, deg_free = tune("angle")) %>%
+  step_ns(coord_x, deg_free = tune("coord_x")) %>%
+  step_ns(game_seconds, deg_free = tune("game_seconds"))
+
+normalized_recipe <-
+  effects_and_dummy_recipe %>%
   step_normalize(all_numeric_predictors())
 
 # ------------------------------------------------------------------------------
@@ -79,39 +94,79 @@ glmn_spec <-
   logistic_reg(penalty = tune(), mixture = tune()) %>% 
   set_engine("glmnet", path_values = coef_path_values)
 
+glmn_recipe <-
+  effects_encode_recipe %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_zv(all_predictors()) %>% 
+  step_ns(angle, deg_free = 50) %>% 
+  step_ns(coord_x, deg_free = 50) %>% 
+  step_ns(game_seconds, deg_free = 50) %>%
+  step_normalize(all_numeric_predictors())
+
 glmn_spline_wflow <- 
   workflow() %>% 
   add_model(glmn_spec) %>% 
-  add_recipe(basic_recipe)
+  add_recipe(glmn_recipe)
 
 set.seed(391)
 glmn_spline_res <-
   glmn_spline_wflow %>%
   tune_grid(
-    resamples = caret_rare_rs,
+    resamples = nhl_val_split,
     control = grid_ctrl,
     grid = glmn_grid
   )
 
 save(
   glmn_spline_res,
-  file = file.path("example_analyses", "caret_rare_glmnet.RData"),
+  file = file.path("example_analyses", "nhl", "base_fits", "nhl_glmnet.RData"),
   compress = "xz",
   compression_level = 9
 )
 
 # ------------------------------------------------------------------------------
 
+gam_f <- 
+  on_goal ~ s(coord_x) + s(angle) + s(game_seconds) + goal_difference + 
+  shooter + goaltender + period +  extra_attacker + season + behind_goal_line + 
+  home_skaters + away_skaters
+
+gam_spec <-
+  gen_additive_mod(select_features = tune()) %>%
+  set_mode("classification")
+
+gam_workflow <-
+  workflow() %>%
+  add_recipe(effects_encode_recipe) %>%
+  add_model(gam_spec, formula = gam_f)
+
+gam_res <-
+  tune_grid(gam_workflow, resamples = nhl_val_split, control = grid_ctrl)
+
+save(
+  gam_res,
+  file = file.path("example_analyses", "nhl", "base_fits", "nhl_gam.RData"),
+  compress = "xz",
+  compression_level = 9
+)
+
+# ------------------------------------------------------------------------------
+
+fda_gcv_res <-
+  discrim_flexible(prod_degree = tune()) %>%
+  tune_grid(effects_encode_recipe, resamples = nhl_val_split, grid = 2,
+            control = grid_ctrl)
+
 fda_grid <- crossing(prod_degree = 1:2, num_terms = 2:25)
 
 fda_manual_res <-
   discrim_flexible(prod_degree = tune(), num_terms = tune(), prune_method = "none") %>%
-  tune_grid(basic_recipe, resamples = caret_rare_rs, grid = fda_grid,
+  tune_grid(effects_encode_recipe, resamples = nhl_val_split, grid = fda_grid,
             control = grid_ctrl)
 
 save(
   fda_manual_res,
-  file = file.path("example_analyses", "caret_rare_fda.RData"),
+  file = file.path("example_analyses", "nhl", "base_fits", "nhl_fda.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -124,90 +179,21 @@ svm_spec <-
 
 svm_workflow <-
   workflow() %>%
-  add_recipe(basic_recipe) %>%
+  add_recipe(normalized_recipe) %>%
   add_model(svm_spec)
 
 set.seed(9264)
 svm_res <-
   tune_grid(
     svm_workflow,
-    resamples = caret_rare_rs,
+    resamples = nhl_val_split,
     grid = 25,
     control = grid_ctrl
   )
 
 save(
   svm_res,
-  file = file.path("example_analyses", "caret_rare_svm.RData"),
-  compress = "xz",
-  compression_level = 9
-)
-
-# ------------------------------------------------------------------------------
-
-
-nnet_spec <-
-  mlp(hidden_units = tune::tune(),
-      penalty = tune::tune(),
-      epochs = tune()
-  ) %>%
-  set_engine("nnet", MaxNWts = 10000) %>% 
-  set_mode('classification')
-
-nnet_param <- 
-  nnet_spec %>% 
-  extract_parameter_set_dials() %>% 
-  update(hidden_units = hidden_units(c(2, 25)))
-
-nnet_workflow <-
-  workflow() %>%
-  add_recipe(basic_recipe) %>%
-  add_model(nnet_spec)
-
-set.seed(9264)
-nnet_res <-
-  tune_grid(
-    nnet_workflow,
-    resamples = caret_rare_rs,
-    grid = 25,
-    control = grid_ctrl,
-    param_info = nnet_param
-  )
-
-save(
-  nnet_res,
-  file = file.path("example_analyses", "caret_rare_nnet.RData"),
-  compress = "xz",
-  compression_level = 9
-)
-
-# ------------------------------------------------------------------------------
-
-kknn_spec <-
-  nearest_neighbor(
-    neighbors = tune::tune(),
-    weight_func = tune::tune(),
-    dist_power = tune::tune()
-  ) %>%
-  set_mode('classification')
-
-knn_workflow <-
-  workflow() %>%
-  add_recipe(basic_recipe) %>%
-  add_model(knn_spec)
-
-set.seed(9264)
-knn_res <-
-  tune_grid(
-    knn_workflow,
-    resamples = caret_rare_rs,
-    grid = 25,
-    control = grid_ctrl
-  )
-
-save(
-  knn_res,
-  file = file.path("example_analyses", "caret_rare_knn.RData"),
+  file = file.path("example_analyses", "nhl", "base_fits", "nhl_svm.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -228,14 +214,14 @@ set.seed(8449)
 bart_res <-
   tune_grid(
     bart_workflow,
-    resamples = caret_rare_rs,
+    resamples = nhl_val_split,
     grid = 25,
     control = grid_ctrl
   )
 
 save(
   bart_res,
-  file = file.path("example_analyses", "caret_rare_bart.RData"),
+  file = file.path("example_analyses", "nhl", "base_fits", "nhl_bart.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -262,19 +248,19 @@ set.seed(3803)
 lgb_res <-
   lgb_workflow %>%
   tune_grid(
-    resamples = caret_rare_rs,
+    resamples = nhl_val_split,
     grid = 25,
     param_info = lgb_param,
     control = grid_ctrl
   )
 
-save(lgb_res, file = file.path("example_analyses", "caret_rare_lgb.RData"), compress = "xz", compression_level = 9)
+save(lgb_res, file = file.path("example_analyses", "nhl", "base_fits", "nhl_lgb.RData"), compress = "xz", compression_level = 9)
 
 # ------------------------------------------------------------------------------
 
 save(
   list = ls(pattern = "(_train$)|(_test$)"),
-  file = file.path("example_analyses", "caret_rare_data.RData")
+  file = file.path("example_analyses", "nhl", "nhl_data.RData")
 )
 
 # ------------------------------------------------------------------------------
