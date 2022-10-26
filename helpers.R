@@ -19,11 +19,25 @@ read_as_workflow_set <- function(dir) {
 add_members <- function(model_stack, dataset) {
   fits_path <- file.path("example_analyses", dataset, "stack_fits")
   
-  needed_members <- unlist(model_stack$cols_map)
-  
+  if (inherits(model_stack, "linear_stack")) {
+    needed_members <- 
+      stacks:::.get_glmn_coefs(
+        model_stack[["coefs"]][["fit"]], 
+        model_stack[["coefs"]][["spec"]][["args"]][["penalty"]]
+      ) %>%
+      dplyr::filter(estimate != 0 & terms != "(Intercept)") %>%
+      dplyr::pull(terms)
+  } else {
+    needed_members <- 
+      model_stack[["cols_map"]] %>%
+      purrr::flatten_chr() %>%
+      unique()
+  }
+
   members_paths <- file.path(fits_path, paste0(needed_members, ".RData"))
   
   model_stack[["member_fits"]] <- lapply(members_paths, get_object)
+  names(model_stack[["member_fits"]]) <- needed_members
   
   model_stack
 }
