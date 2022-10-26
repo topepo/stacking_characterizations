@@ -48,7 +48,7 @@ kc_stack_basic_glmnet_metrics <-
     meta_learner = "glmnet", 
     time_to_fit = timing[["elapsed"]], 
     metric = metric, 
-    metric_value = res_metric
+    metric_value = res_metric$.estimate
   )
 
 kc_stack_basic_glmnet_metrics

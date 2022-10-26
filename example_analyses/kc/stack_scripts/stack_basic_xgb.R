@@ -67,7 +67,7 @@ kc_stack_basic_xgb_metrics <-
     meta_learner = "xgboost", 
     time_to_fit = timing[["elapsed"]], 
     metric = metric, 
-    metric_value = res_metric
+    metric_value = res_metric$.estimate
   )
 
 kc_stack_basic_xgb_metrics
