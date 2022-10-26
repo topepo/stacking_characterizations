@@ -22,9 +22,7 @@ The structure of each sub-folder in `example_analyses`, for a dataset called `da
     - `stack_preproc1_model1.R`: A script that reads in each element of `base_fits/`, row-binds them together to form a workflow set, fits the first `preproc`essor and `model` as a meta-learner to the workflow set, drops in needed fitted members, and then generates some basic metrics with the fitted model stack. This metrics are saved as `dataset_metrics.Rdata` under `dataset/`.
     - `stack_preproc1_model2.R`
     - ...
-    - `metrics/`: 
-      - `stack_preproc1_model1.Rdata`: Metrics on the model stacking process from `stack_preproc1_model1.R`.
-      - `stack_preproc1_model2.Rdata`
-      - ...
+      
+The top-level folder `metrics` contains the "output" from each of these experiments, a five-element list with the dataset name, meta-learner type, time to fit, test set performance metric, and metric value. The files are named in the format `dataset_preproc_model`.
 
 Many `.R` files have analogous `.Rout` files, if ran in batch.
