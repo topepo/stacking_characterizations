@@ -16,6 +16,10 @@ rec_pca <-
   rec_normalize %>%
   step_pca(all_predictors(), threshold = 1)
 
+rec_renormalize <-
+  rec_pca %>%
+  step_normalize(all_numeric_predictors())
+
 # model specifications ---------------------------------------------------------
 # this will just be set as the current default meta-learner with no recipe
 spec_glmnet <- linear_reg()
@@ -65,6 +69,17 @@ meta_learners <-
   bind_rows(
     workflow_set(
       preproc = list(pca = rec_pca),
+      models = list(
+        bag_tree = spec_bt,
+        bag_mars = spec_bm,
+        svm_rbf = spec_svm,
+        mlp = spec_nn
+      )
+    )
+  ) %>%
+  bind_rows(
+    workflow_set(
+      preproc = list(renormalize = rec_renormalize),
       models = list(bag_tree = spec_bt, bag_mars = spec_bm)
     )
   )
