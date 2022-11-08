@@ -8,6 +8,9 @@ tidymodels_prefer()
 options(pillar.advice = FALSE)
 registerDoMC(cores = parallelly::availableCores())
 
+recipe <- "basic"
+spec <- "xgb"
+
 source("helpers.R")
 
 kc_set <- read_as_workflow_set(file.path("example_analyses", "kc", "base_fits"))
@@ -20,25 +23,13 @@ data_stack <-
   add_candidates(kc_set)
 
 # define meta-learner
-meta_spec <- 
-  boost_tree(
-    tree_depth = tune(),
-    learn_rate = tune(),
-    min_n = tune(),
-    loss_reduction = tune(),
-    sample_size = tune(),
-    stop_iter = tune()
-  ) %>% 
-  set_engine('xgboost') %>%
-  set_mode('regression')
-
-meta_rec <-
-  recipe(price ~ ., data = data_stack)
+source(file.path("meta_learners", "specs", paste0("make_spec_", spec, ".R")))
+source(file.path("meta_learners", "recipes", paste0("make_recipe_", recipe, ".R")))
 
 meta_learner <- 
   workflow() %>%
-  add_model(meta_spec) %>%
-  add_recipe(meta_rec)
+  add_model(make_spec()) %>%
+  add_recipe(make_recipe(as.formula(paste0(attr(data_stack, "outcome"), ' ~ .')), data_stack))
 
 # record time-to-fit for meta-learner fitting
 timing <- system.time({
@@ -74,5 +65,5 @@ kc_stack_basic_xgb_metrics
 
 save(
   kc_stack_basic_xgb_metrics, 
-  file = file.path("metrics", "kc_basic_xgboost.RData")
+  file = file.path("metrics", "kc_basic_xgb.RData")
 )

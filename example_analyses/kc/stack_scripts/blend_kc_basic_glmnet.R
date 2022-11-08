@@ -8,6 +8,9 @@ tidymodels_prefer()
 options(pillar.advice = FALSE)
 registerDoMC(cores = parallelly::availableCores())
 
+recipe <- "basic"
+spec <- "glmnet"
+
 source("helpers.R")
 
 kc_set <- read_as_workflow_set(file.path("example_analyses", "kc", "base_fits"))
