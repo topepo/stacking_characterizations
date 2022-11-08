@@ -12,6 +12,12 @@ theme_set(theme_bw())
 options(pillar.advice = FALSE)
 registerDoMC(cores = parallelly::availableCores())
 
+fits_dir <- file.path("example_analyses", "hpc", "candidate_fits")
+
+if (!dir.exists(fits_dir)) {
+  dir.create(fits_dir)
+}
+
 # ------------------------------------------------------------------------------
 
 data(hpc_data, package = "modeldata")
@@ -85,7 +91,7 @@ glmnet_res <-
 
 save(
   glmnet_res,
-  file = file.path("example_analyses", "hpc", "base_fits", "hpc_glmnet.RData"),
+  file = file.path(fits_dir, "hpc_glmnet.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -112,7 +118,7 @@ cart_bag_res <-
 
 save(
   cart_bag_res,
-  file = file.path("example_analyses", "hpc", "base_fits", "hpc_cart_bag.RData"),
+  file = file.path(fits_dir, "hpc_cart_bag.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -145,7 +151,7 @@ fda_res <-
 
 save(
   fda_res,
-  file = file.path("example_analyses", "hpc", "base_fits", "hpc_fda.RData"),
+  file = file.path(fits_dir, "hpc_fda.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -185,7 +191,7 @@ nnet_res <-
 
 save(
   nnet_res,
-  file = file.path("example_analyses", "hpc", "base_fits", "hpc_nnet.RData"),
+  file = file.path(fits_dir, "hpc_nnet.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -217,7 +223,7 @@ svmp_res <-
 
 save(
   svmp_res,
-  file = file.path("example_analyses", "hpc", "base_fits", "hpc_svm.RData"),
+  file = file.path(fits_dir, "hpc_svm.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -251,7 +257,7 @@ xgb_res <-
 
 save(
   xgb_res,
-  file = file.path("example_analyses", "hpc", "base_fits", "hpc_xgb.RData"),
+  file = file.path(fits_dir, "hpc_xgb.RData"),
   compress = "xz",
   compression_level = 9
 )

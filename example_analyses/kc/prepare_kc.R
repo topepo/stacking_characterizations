@@ -14,6 +14,12 @@ theme_set(theme_bw())
 options(pillar.advice = FALSE)
 registerDoMC(cores = parallelly::availableCores())
 
+fits_dir <- file.path("example_analyses", "kc", "candidate_fits")
+
+if (!dir.exists(fits_dir)) {
+  dir.create(fits_dir)
+}
+
 # ------------------------------------------------------------------------------
 
 kc_data <-
@@ -124,7 +130,7 @@ kc_res <-
 
 for (i in seq_along(kc_res$wflow_id)) {
   obj_nm <- paste0("kc_", kc_res$wflow_id[i])
-  file_nm <- file.path("example_analyses", "kc", "base_fits", paste0(obj_nm, ".RData"))
+  file_nm <- file.path(fits_dir, paste0(obj_nm, ".RData"))
   assign(obj_nm, value = kc_res %>% dplyr::slice(i))
   save(list = obj_nm, file = file_nm, compress = "xz", compression_level = 9)
 }

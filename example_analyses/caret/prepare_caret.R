@@ -14,6 +14,12 @@ theme_set(theme_bw())
 options(pillar.advice = FALSE)
 registerDoMC(cores = parallelly::availableCores())
 
+fits_dir <- file.path("example_analyses", "caret", "candidate_fits")
+
+if (!dir.exists(fits_dir)) {
+  dir.create(fits_dir)
+}
+
 # ------------------------------------------------------------------------------
 
 n <- 50000
@@ -95,7 +101,7 @@ glmn_spline_res <-
 
 save(
   glmn_spline_res,
-  file = file.path("example_analyses", "caret", "base_fits", "caret_glmnet.RData"),
+  file = file.path(fits_dir, "caret_glmnet.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -111,7 +117,7 @@ fda_manual_res <-
 
 save(
   fda_manual_res,
-  file = file.path("example_analyses", "caret", "base_fits", "caret_fda.RData"),
+  file = file.path(fits_dir, "caret_fda.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -138,7 +144,7 @@ svm_res <-
 
 save(
   svm_res,
-  file = file.path("example_analyses", "caret", "base_fits", "caret_svm.RData"),
+  file = file.path(fits_dir, "caret_svm.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -176,7 +182,7 @@ nnet_res <-
 
 save(
   nnet_res,
-  file = file.path("example_analyses", "caret", "base_fits", "caret_nnet.RData"),
+  file = file.path(fits_dir, "caret_nnet.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -207,7 +213,7 @@ knn_res <-
 
 save(
   knn_res,
-  file = file.path("example_analyses", "caret", "base_fits", "caret_knn.RData"),
+  file = file.path(fits_dir, "caret_knn.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -235,7 +241,7 @@ bart_res <-
 
 save(
   bart_res,
-  file = file.path("example_analyses", "caret", "base_fits", "caret_bart.RData"),
+  file = file.path(fits_dir, "caret_bart.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -268,7 +274,7 @@ lgb_res <-
     control = grid_ctrl
   )
 
-save(lgb_res, file = file.path("example_analyses", "caret", "base_fits", "caret_lgb.RData"), compress = "xz", compression_level = 9)
+save(lgb_res, file = file.path(fits_dir, "caret_lgb.RData"), compress = "xz", compression_level = 9)
 
 # ------------------------------------------------------------------------------
 

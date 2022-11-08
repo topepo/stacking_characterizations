@@ -13,6 +13,12 @@ theme_set(theme_bw())
 options(pillar.advice = FALSE)
 registerDoMC(cores = parallelly::availableCores())
 
+fits_dir <- file.path("example_analyses", "nhl", "candidate_fits")
+
+if (!dir.exists(fits_dir)) {
+  dir.create(fits_dir)
+}
+
 # ------------------------------------------------------------------------------
 
 pittsburgh <-
@@ -119,7 +125,7 @@ glmn_spline_res <-
 
 save(
   glmn_spline_res,
-  file = file.path("example_analyses", "nhl", "base_fits", "nhl_glmnet.RData"),
+  file = file.path(fits_dir, "nhl_glmnet.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -145,7 +151,7 @@ gam_res <-
 
 save(
   gam_res,
-  file = file.path("example_analyses", "nhl", "base_fits", "nhl_gam.RData"),
+  file = file.path(fits_dir, "nhl_gam.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -166,7 +172,7 @@ fda_manual_res <-
 
 save(
   fda_manual_res,
-  file = file.path("example_analyses", "nhl", "base_fits", "nhl_fda.RData"),
+  file = file.path(fits_dir, "nhl_fda.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -193,7 +199,7 @@ svm_res <-
 
 save(
   svm_res,
-  file = file.path("example_analyses", "nhl", "base_fits", "nhl_svm.RData"),
+  file = file.path(fits_dir, "nhl_svm.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -221,7 +227,7 @@ bart_res <-
 
 save(
   bart_res,
-  file = file.path("example_analyses", "nhl", "base_fits", "nhl_bart.RData"),
+  file = file.path(fits_dir, "nhl_bart.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -254,7 +260,7 @@ lgb_res <-
     control = grid_ctrl
   )
 
-save(lgb_res, file = file.path("example_analyses", "nhl", "base_fits", "nhl_lgb.RData"), compress = "xz", compression_level = 9)
+save(lgb_res, file = file.path(fits_dir, "nhl_lgb.RData"), compress = "xz", compression_level = 9)
 
 # ------------------------------------------------------------------------------
 

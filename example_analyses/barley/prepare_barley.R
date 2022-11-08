@@ -135,10 +135,15 @@ barley_res <-
 
 # ------------------------------------------------------------------------------
 # Save entries in the workflow set separately to reduce the size of the RData file
+fits_dir <- file.path("example_analyses", "barley", "candidate_fits")
+
+if (!dir.exists(fits_dir)) {
+  dir.create(fits_dir)
+}
 
 for (i in seq_along(barley_res$wflow_id)) {
   obj_nm <- paste0("barley_", barley_res$wflow_id[i])
-  file_nm <- file.path("example_analyses", "barley", "base_fits", paste0(obj_nm, ".RData"))
+  file_nm <- file.path(fits_dir, paste0(obj_nm, ".RData"))
   assign(obj_nm, value = barley_res %>% dplyr::slice(i))
   save(list = obj_nm, file = file_nm, compress = "xz", compression_level = 9)
 }

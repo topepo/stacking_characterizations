@@ -17,7 +17,7 @@ read_as_workflow_set <- function(dir) {
 # given an unfitted model stack and the name of a dataset identifier,
 # add the pre-fitted members to the model stack
 add_members <- function(model_stack, dataset) {
-  fits_path <- file.path("example_analyses", dataset, "stack_fits")
+  fits_path <- file.path("example_analyses", dataset, "member_fits")
   
   if (inherits(model_stack, "linear_stack")) {
     needed_members <- 

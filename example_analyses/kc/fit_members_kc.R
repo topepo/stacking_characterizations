@@ -1,6 +1,6 @@
 source("helpers.R")
 
-kc_set <- read_as_workflow_set(file.path("example_analyses", "kc", "base_fits"))
+kc_set <- read_as_workflow_set(file.path("example_analyses", "kc", "candidate_fits"))
 
 load(file.path("example_analyses", "kc", "kc_data.RData"))
 
@@ -41,7 +41,7 @@ kc_member_fits_names <- names(kc_member_fits)
 for (i in seq_along(kc_member_fits)) {
   obj_nm <- kc_member_fits_names[i]
   obj <- kc_member_fits[[i]]
-  file_nm <- file.path("example_analyses", "kc", "stack_fits", paste0(obj_nm, ".RData"))
+  file_nm <- file.path("example_analyses", "kc", "member_fits", paste0(obj_nm, ".RData"))
   assign(obj_nm, value = kc_member_fits[[i]])
   save(list = obj_nm, file = file_nm, compress = "xz", compression_level = 9)
 }

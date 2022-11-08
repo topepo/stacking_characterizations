@@ -13,7 +13,7 @@ spec <- "xgb"
 
 source("helpers.R")
 
-kc_set <- read_as_workflow_set(file.path("example_analyses", "kc", "base_fits"))
+kc_set <- read_as_workflow_set(file.path("example_analyses", "kc", "candidate_fits"))
 
 load(file.path("example_analyses", "kc", "kc_data.RData"))
 
