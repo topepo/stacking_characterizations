@@ -1,7 +1,6 @@
 library(tidymodels)
 library(stacks)
 library(embed)
-library(rules)
 library(doMC)
 
 tidymodels_prefer()
@@ -10,19 +9,20 @@ registerDoMC(cores = parallelly::availableCores())
 
 recipe <- "basic"
 spec <- "glmnet"
+dataset <- "kc"
 
 source("helpers.R")
 
-kc_set <- read_as_workflow_set(file.path("example_analyses", "kc", "candidate_fits"))
+wf_set <- read_as_workflow_set(file.path("example_analyses", dataset, "candidate_fits"))
 
-load(file.path("example_analyses", "kc", "kc_data.RData"))
+load(file.path("example_analyses", dataset, paste0(dataset, "_data.RData")))
 
 # no need to define a meta-learner--use the glmnet default.
 
 # add candidates to a data stack
 data_stack <- 
   stacks() %>%
-  add_candidates(kc_set)
+  add_candidates(wf_set)
 
 # record time-to-fit for meta-learner fitting
 timing <- system.time({
@@ -33,30 +33,29 @@ timing <- system.time({
 })
 
 model_stack_fitted <-
-  add_members(model_stack, "kc")
+  add_members(model_stack, dataset)
 
 metric <- model_stack$model_metrics[[1]]$.metric[[1]]
 
 res_metric <-
-  predict(model_stack_fitted, kc_test) %>%
-  bind_cols(kc_test) %>%
+  predict(model_stack_fitted, test) %>%
+  bind_cols(test) %>%
   rmse(
     truth = !!attr(data_stack, "outcome"),
     estimate = .pred
   )
 
-kc_stack_basic_glmnet_metrics <- 
+res <- 
   list(
-    dataset = "King County", 
-    meta_learner = "glmnet", 
+    dataset = dataset, 
+    recipe = recipe,
+    spec = spec,
     time_to_fit = timing[["elapsed"]], 
     metric = metric, 
     metric_value = res_metric$.estimate
   )
 
-kc_stack_basic_glmnet_metrics
-
 save(
-  kc_stack_basic_glmnet_metrics, 
-  file = file.path("metrics", "kc_basic_glmnet.RData")
+  res, 
+  file = file.path("metrics", paste0(dataset, "_", recipe, "_", spec, ".RData"))
 )

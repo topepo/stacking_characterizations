@@ -24,12 +24,12 @@ The structure of each sub-folder in `example_analyses`, for a dataset called `da
     - `dataset_preproc1_model1.RData`
     - `dataset_preproc1_model2.RData`
     - ...
-  - `stack_scripts/`:
+  - `blend_scripts/`:
     - `blend_dataset_preproc1_model1.R`: A script that reads in each element of `candidate_fits/`, row-binds them together to form a workflow set, generates a data stack using the workflow set, fits the `preproc`essor and `model` as a meta-learner to the data stack, drops in needed fitted members, and then generates some basic metrics with the fitted model stack. These metrics are saved as `dataset_preproc1_model1.Rdata` under `metrics/`.
     - `blend_dataset_preproc1_model2.R`
     - ...
    
-The top-level folder `metrics` contains the "output" from each of these experiments, a five-element list with the dataset name, meta-learner type, time to fit, test set performance metric, and metric value. The files are named in the format `dataset_preproc_model.RData`.
+The top-level folder `metrics` contains the "output" from each of these experiments, a six-element list with the dataset name, preprocessor and model specification for the meta-learner, time to fit, test set performance metric, and metric value. The files are named in the format `dataset_preproc_model.RData`.
 
 The top-level folder `meta_learners` contains the code used to generate the proposed preprocessors and model specifications. 
 

@@ -28,11 +28,11 @@ kc_data <-
 
 set.seed(9276)
 kc_split <- initial_split(kc_data)
-kc_train <- training(kc_split)
-kc_test  <-  testing(kc_split)
+train <- training(kc_split)
+test  <-  testing(kc_split)
 
 set.seed(1184)
-kc_rs <- vfold_cv(kc_train)
+kc_rs <- vfold_cv(train)
 
 # ------------------------------------------------------------------------------
 
@@ -46,7 +46,7 @@ ctrl_grd <-
 # ------------------------------------------------------------------------------
 
 basic_recipe <-
-  recipe(price ~ ., data = kc_train) %>%
+  recipe(price ~ ., data = train) %>%
   step_YeoJohnson(contains("sqft")) %>% 
   step_lencode_mixed(zip_code, outcome = vars(price)) %>%
   step_date(date_sold) %>%
