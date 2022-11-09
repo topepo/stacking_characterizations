@@ -34,11 +34,11 @@ averaged <-
 
 set.seed(1701)
 conc_split <- initial_split(averaged, strata = compressive_strength)
-conc_train <- training(conc_split)
-conc_test  <- testing(conc_split)
+train <- training(conc_split)
+test  <- testing(conc_split)
 
 set.seed(1702) 
-conc_rs <- vfold_cv(conc_train, strata = compressive_strength)
+conc_rs <- vfold_cv(train, strata = compressive_strength)
 
 # ------------------------------------------------------------------------------
 
@@ -51,10 +51,10 @@ grid_ctrl <-
 
 # ------------------------------------------------------------------------------
 
-predictors <- names(conc_train)[names(conc_train) != "compressive_strength"]
+predictors <- names(train)[names(train) != "compressive_strength"]
 
 conc_rec <- 
-  recipe(compressive_strength ~ ., data = conc_train) %>% 
+  recipe(compressive_strength ~ ., data = train) %>% 
   step_YeoJohnson(all_numeric_predictors()) %>% 
   step_normalize(all_numeric_predictors())
 
@@ -235,7 +235,7 @@ for (i in seq_along(conc_res$wflow_id)) {
 }
 
 save(
-  list = ls(pattern = "(_train$)|(_test$)"),
+  train, test,
   file = file.path("example_analyses", "conc", "conc_data.RData"), 
   compress = "xz", 
   compression_level = 9

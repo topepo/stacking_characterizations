@@ -136,7 +136,7 @@ for (i in seq_along(kc_res$wflow_id)) {
 }
 
 save(
-  list = ls(pattern = "(_train$)|(_test$)"),
+  train, test,
   file = file.path("example_analyses", "kc", "kc_data.RData"),
   compress = "xz",
   compression_level = 9

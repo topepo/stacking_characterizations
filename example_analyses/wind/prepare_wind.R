@@ -36,11 +36,11 @@ wind_turbine <-
 
 set.seed(1701)
 wind_split <- initial_split(wind_turbine, strata = capacity)
-wind_train <- training(wind_split)
-wind_test  <- testing(wind_split)
+train <- training(wind_split)
+test  <- testing(wind_split)
 
 set.seed(1702) 
-wind_rs <- vfold_cv(wind_train, strata = capacity)
+wind_rs <- vfold_cv(train, strata = capacity)
 
 # ------------------------------------------------------------------------------
 
@@ -54,7 +54,7 @@ grid_ctrl <-
 # ------------------------------------------------------------------------------
 
 base_rec <- 
-  recipe(capacity ~ ., data = wind_train) %>% 
+  recipe(capacity ~ ., data = train) %>% 
   step_lencode_mixed(model, manufacturer, outcome = vars(capacity)) %>% 
   step_impute_knn(turbine_rated_capacity_k_w)
 
@@ -196,7 +196,7 @@ for (i in seq_along(wind_res$wflow_id)) {
 }
 
 save(
-  list = ls(pattern = "(_train$)|(_test$)"),
+  train, test,
   file = file.path("example_analyses", "wind", "wind_data.RData"), 
   compress = "xz", 
   compression_level = 9

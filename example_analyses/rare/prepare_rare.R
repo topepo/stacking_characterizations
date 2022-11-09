@@ -14,7 +14,7 @@ theme_set(theme_bw())
 options(pillar.advice = FALSE)
 registerDoMC(cores = parallelly::availableCores())
 
-fits_dir <- file.path("example_analyses", "caret_rare", "candidate_fits")
+fits_dir <- file.path("example_analyses", "rare", "candidate_fits")
 
 if (!dir.exists(fits_dir)) {
   dir.create(fits_dir)
@@ -33,12 +33,12 @@ class_sim_caret <-
 
 
 set.seed(1701)
-caret_rare_split <- initial_split(class_sim_caret, strata = class)
-caret_rare_train <- training(caret_rare_split)
-caret_rare_test  <- testing(caret_rare_split)
+rare_split <- initial_split(class_sim_caret, strata = class)
+train <- training(rare_split)
+test  <- testing(rare_split)
 
 set.seed(1702) 
-caret_rare_rs <- vfold_cv(caret_rare_train, strata = class)
+rare_rs <- vfold_cv(train, strata = class)
 
 # ------------------------------------------------------------------------------
 
@@ -50,7 +50,7 @@ grid_ctrl <-
   )
 
 basic_recipe <-
-  recipe(class ~ ., data = caret_rare_train) %>%
+  recipe(class ~ ., data = train) %>%
   step_normalize(all_numeric_predictors())
 
 # ------------------------------------------------------------------------------
@@ -94,14 +94,14 @@ set.seed(391)
 glmn_spline_res <-
   glmn_spline_wflow %>%
   tune_grid(
-    resamples = caret_rare_rs,
+    resamples = rare_rs,
     control = grid_ctrl,
     grid = glmn_grid
   )
 
 save(
   glmn_spline_res,
-  file = file.path(fits_dir, "caret_rare_glmnet.RData"),
+  file = file.path(fits_dir, "rare_glmnet.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -112,12 +112,12 @@ fda_grid <- crossing(prod_degree = 1:2, num_terms = 2:25)
 
 fda_manual_res <-
   discrim_flexible(prod_degree = tune(), num_terms = tune(), prune_method = "none") %>%
-  tune_grid(basic_recipe, resamples = caret_rare_rs, grid = fda_grid,
+  tune_grid(basic_recipe, resamples = rare_rs, grid = fda_grid,
             control = grid_ctrl)
 
 save(
   fda_manual_res,
-  file = file.path(fits_dir, "caret_rare_fda.RData"),
+  file = file.path(fits_dir, "rare_fda.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -137,14 +137,14 @@ set.seed(9264)
 svm_res <-
   tune_grid(
     svm_workflow,
-    resamples = caret_rare_rs,
+    resamples = rare_rs,
     grid = 25,
     control = grid_ctrl
   )
 
 save(
   svm_res,
-  file = file.path(fits_dir, "caret_rare_svm.RData"),
+  file = file.path(fits_dir, "rare_svm.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -174,7 +174,7 @@ set.seed(9264)
 nnet_res <-
   tune_grid(
     nnet_workflow,
-    resamples = caret_rare_rs,
+    resamples = rare_rs,
     grid = 25,
     control = grid_ctrl,
     param_info = nnet_param
@@ -182,7 +182,7 @@ nnet_res <-
 
 save(
   nnet_res,
-  file = file.path(fits_dir, "caret_rare_nnet.RData"),
+  file = file.path(fits_dir, "rare_nnet.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -206,14 +206,14 @@ set.seed(9264)
 knn_res <-
   tune_grid(
     knn_workflow,
-    resamples = caret_rare_rs,
+    resamples = rare_rs,
     grid = 25,
     control = grid_ctrl
   )
 
 save(
   knn_res,
-  file = file.path(fits_dir, "caret_rare_knn.RData"),
+  file = file.path(fits_dir, "rare_knn.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -234,14 +234,14 @@ set.seed(8449)
 bart_res <-
   tune_grid(
     bart_workflow,
-    resamples = caret_rare_rs,
+    resamples = rare_rs,
     grid = 25,
     control = grid_ctrl
   )
 
 save(
   bart_res,
-  file = file.path(fits_dir, "caret_rare_bart.RData"),
+  file = file.path(fits_dir, "rare_bart.RData"),
   compress = "xz",
   compression_level = 9
 )
@@ -268,19 +268,19 @@ set.seed(3803)
 lgb_res <-
   lgb_workflow %>%
   tune_grid(
-    resamples = caret_rare_rs,
+    resamples = rare_rs,
     grid = 25,
     param_info = lgb_param,
     control = grid_ctrl
   )
 
-save(lgb_res, file = file.path(fits_dir, "caret_rare_lgb.RData"), compress = "xz", compression_level = 9)
+save(lgb_res, file = file.path(fits_dir, "rare_lgb.RData"), compress = "xz", compression_level = 9)
 
 # ------------------------------------------------------------------------------
 
 save(
-  list = ls(pattern = "(_train$)|(_test$)"),
-  file = file.path("example_analyses", "caret_rare", "caret_rare_data.RData")
+  train, test,
+  file = file.path("example_analyses", "rare", "rare_data.RData")
 )
 
 # ------------------------------------------------------------------------------

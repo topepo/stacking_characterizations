@@ -34,11 +34,11 @@ class_sim_caret <-
 
 set.seed(1701)
 caret_split <- initial_split(class_sim_caret, strata = class)
-caret_train <- training(caret_split)
-caret_test  <- testing(caret_split)
+train <- training(caret_split)
+test  <- testing(caret_split)
 
 set.seed(1702) 
-caret_rs <- vfold_cv(caret_train, strata = class)
+caret_rs <- vfold_cv(train, strata = class)
 
 # ------------------------------------------------------------------------------
 
@@ -50,7 +50,7 @@ grid_ctrl <-
   )
 
 basic_recipe <-
-  recipe(class ~ ., data = caret_train) %>%
+  recipe(class ~ ., data = train) %>%
   step_normalize(all_numeric_predictors())
 
 # ------------------------------------------------------------------------------
@@ -279,7 +279,7 @@ save(lgb_res, file = file.path(fits_dir, "caret_lgb.RData"), compress = "xz", co
 # ------------------------------------------------------------------------------
 
 save(
-  list = ls(pattern = "(_train$)|(_test$)"),
+  train, test,
   file = file.path("example_analyses", "caret", "caret_data.RData")
 )
 

@@ -24,11 +24,11 @@ data(hpc_data, package = "modeldata")
 
 set.seed(1373)
 hpc_split <- initial_split(hpc_data, prop = 8 / 10, strata = class)
-hpc_train <- training(hpc_split)
-hpc_test  <- testing(hpc_split)
+train <- training(hpc_split)
+test  <- testing(hpc_split)
 
 set.seed(4497)
-hpc_rs <- vfold_cv(hpc_train, repeats = 2)
+hpc_rs <- vfold_cv(train, repeats = 2)
 
 ctrl_grid <- control_grid(save_workflow = TRUE, save_pred = TRUE)
 
@@ -45,7 +45,7 @@ norm_recipe <-
   step_normalize(all_numeric_predictors())
 
 glmnet_recipe <- 
-  recipe(formula = class ~ ., data = hpc_train) %>%
+  recipe(formula = class ~ ., data = train) %>%
   step_log(compounds, input_fields) %>% 
   step_log(num_pending, offset = 1) %>% 
   step_dummy(all_nominal_predictors()) %>% 
@@ -265,7 +265,7 @@ save(
 # ------------------------------------------------------------------------------
 
 save(
-  list = ls(pattern = "(_train$)|(_test$)"),
+  train, test,
   file = file.path("example_analyses", "hpc", "hpc_data.RData"), 
   compress = "xz", 
   compression_level = 9

@@ -31,16 +31,16 @@ pittsburgh <-
 set.seed(1)
 nhl_split <- initial_time_split(pittsburgh, prop = 3/4)
 nhl_not_test <- training(nhl_split)
-nhl_test <- testing(nhl_split)
+test <- testing(nhl_split)
 
 set.seed(2)
 nhl_val_split <- validation_split(nhl_not_test, prop = 9/10)
-nhl_train <- training(nhl_val_split$splits[[1]])
+train <- training(nhl_val_split$splits[[1]])
 
 # ------------------------------------------------------------------------------
 
 basic_recipe <-
-  recipe(formula = on_goal ~ ., data = nhl_train)
+  recipe(formula = on_goal ~ ., data = train)
 
 effects_encode_recipe <-
   basic_recipe %>%
@@ -265,7 +265,7 @@ save(lgb_res, file = file.path(fits_dir, "nhl_lgb.RData"), compress = "xz", comp
 # ------------------------------------------------------------------------------
 
 save(
-  list = ls(pattern = "(_train$)|(_test$)"),
+  train, test,
   file = file.path("example_analyses", "nhl", "nhl_data.RData")
 )
 

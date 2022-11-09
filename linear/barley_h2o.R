@@ -18,19 +18,19 @@ load(file.path("example_analyses", "barley_data.RData"))
 # ------------------------------------------------------------------------------
 
 basic_recipe <- 
-  recipe(barley ~ ., data = barley_train) %>% 
+  recipe(barley ~ ., data = train) %>% 
   step_YeoJohnson(all_numeric_predictors()) %>% 
   step_normalize(all_predictors())
 
 pca_recipe <- 
-  recipe(barley ~ ., data = barley_train) %>% 
+  recipe(barley ~ ., data = train) %>% 
   step_YeoJohnson(all_numeric_predictors()) %>% 
   step_normalize(all_predictors()) %>% 
   step_pca(all_predictors(), num_comp = 50) %>% 
   step_normalize(starts_with("PC"))
 
 pls_recipe <- 
-  recipe(barley ~ ., data = barley_train) %>% 
+  recipe(barley ~ ., data = train) %>% 
   step_YeoJohnson(all_numeric_predictors()) %>% 
   step_normalize(all_predictors()) %>% 
   step_pls(all_predictors(), num_comp = 50, outcome = vars(barley))
