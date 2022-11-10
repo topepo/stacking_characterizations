@@ -1,8 +1,21 @@
 
 # Stacking Characterizations
 
-This repository is a sandbox to look into parameters affecting model
-stacking.
+This repository contains source code for a set of experiments that
+assess the performance of multiple approaches to model stacking with the
+[stacks package](https://stacks.tidymodels.org/).
+
+The scripts in this repo benchmark the existing implemented
+meta-learner, a regularized linear model, against a set of proposed
+alternative meta-learners. They rely on a branch of the stacks package
+which introduces a `meta_learner` argument to `blend_predictions`,
+allowing for combining predictions from member models with any modeling
+workflow. That version of the package can be installed with the
+following code:
+
+``` r
+pak::pak("tidymodels/stacks@general-meta")
+```
 
 ## Structure
 
@@ -41,7 +54,7 @@ called `dataset`, is as follows:
         -   `dataset_preproc1_model1.RData`
         -   `dataset_preproc1_model2.RData`
         -   …
-    -   `stack_scripts/`:
+    -   `blend_scripts/`:
         -   `blend_dataset_preproc1_model1.R`: A script that reads in
             each element of `candidate_fits/`, row-binds them together
             to form a workflow set, generates a data stack using the
@@ -54,9 +67,10 @@ called `dataset`, is as follows:
         -   …
 
 The top-level folder `metrics` contains the “output” from each of these
-experiments, a five-element list with the dataset name, meta-learner
-type, time to fit, test set performance metric, and metric value. The
-files are named in the format `dataset_preproc_model.RData`.
+experiments, a six-element list with the dataset name, preprocessor and
+model specification for the meta-learner, time to fit, test set
+performance metric, and metric value. The files are named in the format
+`dataset_preproc_model.RData`.
 
 The top-level folder `meta_learners` contains the code used to generate
 the proposed preprocessors and model specifications.
@@ -64,10 +78,8 @@ the proposed preprocessors and model specifications.
 The naming schemes in these experiments are chosen for straightforward
 extensibility:
 
--   Run all of the data preparation scripts (`.R` files starting with
-    `prepare_`)
--   Run all of the workflow set fitting scripts (`.R` files starting
-    with `fit_candidates_`)
+-   Run all of the data preparation scripts and workflow set fitting
+    scripts (`.R` files starting with `prepare_`)
 -   Run all of the member fitting scripts (`.R` files starting with
     `fit_members_`)
 -   Run all of the blending + benchmarking scripts (`.R` files starting
