@@ -1,5 +1,4 @@
 library(parallelly)
-library(tidytuesdayR)
 library(tidymodels)
 library(embed)
 library(bonsai)
@@ -22,7 +21,7 @@ if (!dir.exists(fits_dir)) {
 
 # ------------------------------------------------------------------------------
 
-wind_turbine_raw <- tt_load("2020-10-27")$`wind-turbine`
+load(file.path("data", "wind_turbine_raw.RData"))
 
 wind_turbine <-
   wind_turbine_raw %>%
