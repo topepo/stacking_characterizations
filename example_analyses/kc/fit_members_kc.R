@@ -38,6 +38,10 @@ kc_member_fits <- map(kc_member_fits, butcher)
 kc_member_fits <- map(kc_member_fits, rm_yhat_train)
 kc_member_fits_names <- names(kc_member_fits)
 
+if (!dir.exists(file.path("example_analyses", "kc", "member_fits"))) {
+  dir.create(file.path("example_analyses", "kc", "member_fits"))
+}
+
 for (i in seq_along(kc_member_fits)) {
   obj_nm <- kc_member_fits_names[i]
   obj <- kc_member_fits[[i]]
