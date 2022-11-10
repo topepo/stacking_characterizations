@@ -17,7 +17,7 @@ wf_set <- read_as_workflow_set(file.path("example_analyses", dataset, "candidate
 
 load(file.path("example_analyses", dataset, paste0(dataset, "_data.RData")))
 
-# no need to define a meta-learner--use the glmnet default.
+
 
 # add candidates to a data stack
 data_stack <- 
