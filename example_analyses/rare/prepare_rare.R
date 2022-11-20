@@ -200,7 +200,7 @@ kknn_spec <-
 knn_workflow <-
   workflow() %>%
   add_recipe(basic_recipe) %>%
-  add_model(knn_spec)
+  add_model(kknn_spec)
 
 set.seed(9264)
 knn_res <-
