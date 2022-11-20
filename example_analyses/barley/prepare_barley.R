@@ -82,7 +82,8 @@ nnet_spec <-
       penalty = tune::tune(),
       epochs = tune()
   ) %>%
-  set_mode('regression')
+  set_mode('regression') %>% 
+  set_engine("nnet", MaxNWts = 5000)
 
 kknn_spec <-
   nearest_neighbor(
