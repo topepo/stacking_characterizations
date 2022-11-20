@@ -78,12 +78,9 @@ resamp_ctrl <-
 
 # ------------------------------------------------------------------------------
 
-coef_path_values <- 10^seq(-2, 0, length.out = 30)
-glmn_grid <- crossing(penalty = coef_path_values, mixture = (0:5) / 5)
-
 glmn_spec <- 
   logistic_reg(penalty = tune(), mixture = tune()) %>% 
-  set_engine("glmnet", path_values = coef_path_values)
+  set_engine("glmnet")
 
 glmn_spline_wflow <- 
   workflow() %>% 
@@ -96,7 +93,7 @@ glmn_spline_res <-
   tune_grid(
     resamples = rare_rs,
     control = grid_ctrl,
-    grid = glmn_grid
+    grid = 25
   )
 
 save(
