@@ -1,6 +1,7 @@
 library(tidymodels)
 library(stacks)
 library(embed)
+library(baguette)
 library(doMC)
 
 tidymodels_prefer()

@@ -1,5 +1,6 @@
 library(tidymodels)
 library(stacks)
+library(baguette)
 library(embed)
 library(doMC)
 
