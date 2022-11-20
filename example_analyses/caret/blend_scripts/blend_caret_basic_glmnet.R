@@ -1,5 +1,6 @@
 library(tidymodels)
 library(stacks)
+library(rules)
 library(embed)
 library(doMC)
 
