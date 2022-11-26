@@ -1,0 +1,455 @@
+
+R version 4.2.0 (2022-04-22) -- "Vigorous Calisthenics"
+Copyright (C) 2022 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin17.0 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(parallelly)
+> library(ongoal)
+> library(tidymodels)
+── Attaching packages ────────────────────────────────────── tidymodels 1.0.0 ──
+✔ broom        1.0.1      ✔ recipes      1.0.3 
+✔ dials        1.1.0      ✔ rsample      1.1.0 
+✔ dplyr        1.0.10     ✔ tibble       3.1.8 
+✔ ggplot2      3.4.0      ✔ tidyr        1.2.1 
+✔ infer        1.0.3      ✔ tune         1.0.1 
+✔ modeldata    1.0.1      ✔ workflows    1.1.2 
+✔ parsnip      1.0.3      ✔ workflowsets 1.0.0 
+✔ purrr        0.3.5      ✔ yardstick    1.1.0 
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ purrr::discard() masks scales::discard()
+✖ dplyr::filter()  masks stats::filter()
+✖ dplyr::lag()     masks stats::lag()
+✖ recipes::step()  masks stats::step()
+• Use suppressPackageStartupMessages() to eliminate package startup messages
+> library(embed)
+> library(bonsai)
+> library(discrim)
+
+Attaching package: ‘discrim’
+
+The following object is masked from ‘package:dials’:
+
+    smoothness
+
+> library(doMC)
+Loading required package: foreach
+
+Attaching package: ‘foreach’
+
+The following objects are masked from ‘package:purrr’:
+
+    accumulate, when
+
+Loading required package: iterators
+Loading required package: parallel
+> 
+> # ------------------------------------------------------------------------------
+> 
+> tidymodels_prefer()
+> theme_set(theme_bw())
+> options(pillar.advice = FALSE)
+> registerDoMC(cores = parallelly::availableCores())
+> 
+> fits_dir <- file.path("example_analyses", "nhl", "candidate_fits")
+> 
+> if (!dir.exists(fits_dir)) {
++   dir.create(fits_dir)
++ }
+> 
+> # ------------------------------------------------------------------------------
+> 
+> pittsburgh <-
++   on_goal %>%
++   arrange(game_id, event_idx) %>%
++   select(-game_id, -event_idx, -date_time, -event, -distance)
+> 
+> # ------------------------------------------------------------------------------
+> 
+> set.seed(1)
+> nhl_split <- initial_time_split(pittsburgh, prop = 3/4)
+> nhl_not_test <- training(nhl_split)
+> test <- testing(nhl_split)
+> 
+> set.seed(2)
+> nhl_val_split <- validation_split(nhl_not_test, prop = 9/10)
+> train <- training(nhl_val_split$splits[[1]])
+> 
+> # ------------------------------------------------------------------------------
+> 
+> basic_recipe <-
++   recipe(formula = on_goal ~ ., data = train)
+> 
+> effects_encode_recipe <-
++   basic_recipe %>%
++   step_lencode_mixed(shooter, goaltender, shooter_nationality, outcome = vars(on_goal))
+> 
+> effects_and_dummy_recipe <-
++   effects_encode_recipe %>%
++   step_dummy(all_nominal_predictors()) %>%
++   step_zv(all_predictors()) %>%
++   step_lincomb(all_numeric_predictors())
+> 
+> all_dummy_recipe <-
++   basic_recipe %>%
++   step_dummy(all_nominal_predictors()) %>%
++   step_zv(all_predictors()) %>%
++   step_lincomb(all_numeric_predictors())
+> 
+> spline_recipe <-
++   effects_and_dummy_recipe %>%
++   step_ns(angle, deg_free = tune("angle")) %>%
++   step_ns(coord_x, deg_free = tune("coord_x")) %>%
++   step_ns(game_seconds, deg_free = tune("game_seconds"))
+> 
+> normalized_recipe <-
++   effects_and_dummy_recipe %>%
++   step_normalize(all_numeric_predictors())
+> 
+> # ------------------------------------------------------------------------------
+> 
+> grid_ctrl <-
++   control_grid(
++     parallel_over = "everything",
++     save_pred = TRUE,
++     save_workflow = TRUE
++   )
+> bay_ctrl <-
++   control_bayes(
++     parallel_over = "everything",
++     save_pred = TRUE,
++     save_workflow = TRUE,
++     verbose = TRUE,
++     no_improve = 20L
++   )
+> resamp_ctrl <-
++   control_resamples(
++     parallel_over = "everything",
++     save_pred = TRUE,
++     save_workflow = TRUE
++   )
+> 
+> # ------------------------------------------------------------------------------
+> 
+> glmn_spec <- 
++   logistic_reg(penalty = tune(), mixture = tune()) %>% 
++   set_engine("glmnet")
+> 
+> glmn_recipe <-
++   effects_encode_recipe %>%
++   step_dummy(all_nominal_predictors()) %>%
++   step_zv(all_predictors()) %>% 
++   step_ns(angle, deg_free = 50) %>% 
++   step_ns(coord_x, deg_free = 50) %>% 
++   step_ns(game_seconds, deg_free = 50) %>%
++   step_normalize(all_numeric_predictors())
+> 
+> glmn_spline_wflow <- 
++   workflow() %>% 
++   add_model(glmn_spec) %>% 
++   add_recipe(glmn_recipe)
+> 
+> set.seed(391)
+> glmn_spline_res <-
++   glmn_spline_wflow %>%
++   tune_grid(
++     resamples = nhl_val_split,
++     control = grid_ctrl,
++     grid = 25
++   )
+> 
+> save(
++   glmn_spline_res,
++   file = file.path(fits_dir, "nhl_glmnet.RData"),
++   compress = "xz",
++   compression_level = 9
++ )
+> 
+> # ------------------------------------------------------------------------------
+> 
+> gam_f <- 
++   on_goal ~ s(coord_x) + s(angle) + s(game_seconds) + goal_difference + 
++   shooter + goaltender + period +  extra_attacker + season + behind_goal_line + 
++   home_skaters + away_skaters
+> 
+> gam_spec <-
++   gen_additive_mod(select_features = tune()) %>%
++   set_mode("classification")
+> 
+> gam_workflow <-
++   workflow() %>%
++   add_recipe(effects_encode_recipe) %>%
++   add_model(gam_spec, formula = gam_f)
+> 
+> gam_res <-
++   tune_grid(gam_workflow, resamples = nhl_val_split, control = grid_ctrl)
+> 
+> save(
++   gam_res,
++   file = file.path(fits_dir, "nhl_gam.RData"),
++   compress = "xz",
++   compression_level = 9
++ )
+> 
+> # ------------------------------------------------------------------------------
+> 
+> fda_gcv_res <-
++   discrim_flexible(prod_degree = tune()) %>%
++   tune_grid(effects_encode_recipe, resamples = nhl_val_split, grid = 2,
++             control = grid_ctrl)
+> 
+> fda_grid <- crossing(prod_degree = 1:2, num_terms = 2:25)
+> 
+> fda_manual_res <-
++   discrim_flexible(prod_degree = tune(), num_terms = tune(), prune_method = "none") %>%
++   tune_grid(effects_encode_recipe, resamples = nhl_val_split, grid = fda_grid,
++             control = grid_ctrl)
+> 
+> save(
++   fda_manual_res,
++   file = file.path(fits_dir, "nhl_fda.RData"),
++   compress = "xz",
++   compression_level = 9
++ )
+> 
+> # ------------------------------------------------------------------------------
+> 
+> svm_spec <-
++   svm_rbf(cost = tune(), rbf_sigma = tune()) %>%
++   set_mode("classification")
+> 
+> svm_workflow <-
++   workflow() %>%
++   add_recipe(normalized_recipe) %>%
++   add_model(svm_spec)
+> 
+> set.seed(9264)
+> svm_res <-
++   tune_grid(
++     svm_workflow,
++     resamples = nhl_val_split,
++     grid = 25,
++     control = grid_ctrl
++   )
+x validation: preprocessor 1/1, model 21/25 (predictions): Error in prob.model(object)[[p]]$A: $ operator is invalid for atomic vec...
+> 
+> save(
++   svm_res,
++   file = file.path(fits_dir, "nhl_svm.RData"),
++   compress = "xz",
++   compression_level = 9
++ )
+> 
+> # ------------------------------------------------------------------------------
+> 
+> bart_spec <-
++   parsnip::bart(prior_terminal_node_coef = tune(),
++                 prior_terminal_node_expo = tune()) %>%
++   set_mode("classification")
+> 
+> bart_workflow <-
++   workflow() %>%
++   add_recipe(basic_recipe) %>%
++   add_model(bart_spec)
+> 
+> set.seed(8449)
+> bart_res <-
++   tune_grid(
++     bart_workflow,
++     resamples = nhl_val_split,
++     grid = 25,
++     control = grid_ctrl
++   )
+> 
+> save(
++   bart_res,
++   file = file.path(fits_dir, "nhl_bart.RData"),
++   compress = "xz",
++   compression_level = 9
++ )
+> 
+> # ------------------------------------------------------------------------------
+> 
+> lgb_spec <-
++   boost_tree(trees = tune(), min_n = tune(), tree_depth = tune(), learn_rate = tune(),
++              loss_reduction = tune(), sample_size = tune(), mtry = tune()) %>%
++   set_engine("lightgbm", num_threads = 1) %>% 
++   set_mode("classification")
+> 
+> lgb_param <-
++   lgb_spec %>%
++   extract_parameter_set_dials() %>%
++   update(learn_rate = learn_rate(c(-2, 0)))
+> 
+> lgb_workflow <-
++   workflow() %>%
++   add_recipe(basic_recipe) %>%
++   add_model(lgb_spec)
+> 
+> set.seed(3803)
+> lgb_res <-
++   lgb_workflow %>%
++   tune_grid(
++     resamples = nhl_val_split,
++     grid = 25,
++     param_info = lgb_param,
++     control = grid_ctrl
++   )
+i Creating pre-processing data to finalize unknown parameter: mtry
+> 
+> save(lgb_res, file = file.path(fits_dir, "nhl_lgb.RData"), compress = "xz", compression_level = 9)
+> 
+> # ------------------------------------------------------------------------------
+> 
+> save(
++   train, test,
++   file = file.path("example_analyses", "nhl", "nhl_data.RData")
++ )
+> 
+> # ------------------------------------------------------------------------------
+> 
+> sessioninfo::session_info()
+─ Session info ───────────────────────────────────────────────────────────────
+ setting  value
+ version  R version 4.2.0 (2022-04-22)
+ os       macOS Big Sur/Monterey 10.16
+ system   x86_64, darwin17.0
+ ui       X11
+ language (EN)
+ collate  en_US.UTF-8
+ ctype    en_US.UTF-8
+ tz       America/New_York
+ date     2022-11-22
+ pandoc   2.17.1.1 @ /usr/local/bin/pandoc
+
+─ Packages ───────────────────────────────────────────────────────────────────
+ package       * version    date (UTC) lib source
+ assertthat      0.2.1      2019-03-21 [1] CRAN (R 4.2.0)
+ backports       1.4.1      2021-12-13 [1] CRAN (R 4.2.0)
+ base64enc       0.1-3      2015-07-28 [1] CRAN (R 4.2.0)
+ bonsai        * 0.2.0.9000 2022-09-21 [1] Github (tidymodels/bonsai@035a0af)
+ boot            1.3-28     2021-05-03 [1] CRAN (R 4.2.0)
+ broom         * 1.0.1      2022-08-29 [1] CRAN (R 4.2.0)
+ cachem          1.0.6      2021-08-19 [1] CRAN (R 4.2.0)
+ class         * 7.3-20     2022-01-13 [1] CRAN (R 4.2.0)
+ cli             3.4.1      2022-09-23 [1] CRAN (R 4.2.0)
+ codetools       0.2-18     2020-11-04 [1] CRAN (R 4.2.0)
+ colorspace      2.0-3      2022-02-21 [1] CRAN (R 4.2.0)
+ conflicted      1.1.0      2021-11-26 [1] CRAN (R 4.2.0)
+ data.table      1.14.4     2022-10-17 [1] CRAN (R 4.2.0)
+ dbarts        * 0.9-22     2022-03-29 [1] CRAN (R 4.2.0)
+ DBI             1.1.3      2022-06-18 [1] CRAN (R 4.2.0)
+ dials         * 1.1.0      2022-11-04 [1] CRAN (R 4.2.0)
+ DiceDesign      1.9        2021-02-13 [1] CRAN (R 4.2.0)
+ digest          0.6.30     2022-10-18 [1] CRAN (R 4.2.0)
+ discrim       * 1.0.0.9000 2022-08-16 [1] Github (tidymodels/discrim@6060ce1)
+ doMC          * 1.3.8      2022-02-05 [1] CRAN (R 4.2.0)
+ dplyr         * 1.0.10     2022-09-01 [1] CRAN (R 4.2.0)
+ earth         * 5.3.1      2021-07-20 [1] CRAN (R 4.2.0)
+ ellipsis        0.3.2      2021-04-29 [1] CRAN (R 4.2.0)
+ embed         * 1.0.0      2022-07-02 [1] CRAN (R 4.2.0)
+ fansi           1.0.3      2022-03-24 [1] CRAN (R 4.2.0)
+ fastmap         1.1.0      2021-01-25 [1] CRAN (R 4.2.0)
+ foreach       * 1.5.2      2022-02-02 [1] CRAN (R 4.2.0)
+ Formula       * 1.2-4      2020-10-16 [1] CRAN (R 4.2.0)
+ furrr           0.3.1      2022-08-15 [1] CRAN (R 4.2.0)
+ future          1.29.0     2022-11-06 [1] CRAN (R 4.2.0)
+ future.apply    1.10.0     2022-11-05 [1] CRAN (R 4.2.0)
+ generics        0.1.3      2022-07-05 [1] CRAN (R 4.2.0)
+ ggplot2       * 3.4.0      2022-11-04 [1] CRAN (R 4.2.0)
+ glmnet        * 4.1-4      2022-04-15 [1] CRAN (R 4.2.0)
+ globals         0.16.1     2022-08-28 [1] CRAN (R 4.2.0)
+ glue            1.6.2      2022-02-24 [1] CRAN (R 4.2.0)
+ gower           1.0.0      2022-02-03 [1] CRAN (R 4.2.0)
+ GPfit           1.0-8      2019-02-08 [1] CRAN (R 4.2.0)
+ gtable          0.3.1      2022-09-01 [1] CRAN (R 4.2.0)
+ hardhat         1.2.0      2022-06-30 [1] CRAN (R 4.2.0)
+ infer         * 1.0.3      2022-08-22 [1] CRAN (R 4.2.0)
+ ipred           0.9-13     2022-06-02 [1] CRAN (R 4.2.0)
+ iterators     * 1.0.14     2022-02-05 [1] CRAN (R 4.2.0)
+ jsonlite        1.8.3      2022-10-21 [1] CRAN (R 4.2.0)
+ keras           2.9.0      2022-05-23 [1] CRAN (R 4.2.0)
+ kernlab       * 0.9-31     2022-06-09 [1] CRAN (R 4.2.0)
+ lattice         0.20-45    2021-09-22 [1] CRAN (R 4.2.0)
+ lava            1.7.0      2022-10-25 [1] CRAN (R 4.2.0)
+ lhs             1.1.5      2022-03-22 [1] CRAN (R 4.2.0)
+ lifecycle       1.0.3      2022-10-07 [1] CRAN (R 4.2.0)
+ lightgbm      * 3.3.3      2022-10-10 [1] CRAN (R 4.2.0)
+ listenv         0.8.0      2019-12-05 [1] CRAN (R 4.2.0)
+ lme4          * 1.1-30     2022-07-08 [1] CRAN (R 4.2.0)
+ lubridate       1.9.0      2022-11-06 [1] CRAN (R 4.2.0)
+ magrittr        2.0.3      2022-03-30 [1] CRAN (R 4.2.0)
+ MASS            7.3-58.1   2022-08-03 [1] CRAN (R 4.2.0)
+ Matrix        * 1.5-3      2022-11-11 [1] CRAN (R 4.2.0)
+ mda           * 0.5-3      2022-05-05 [1] CRAN (R 4.2.0)
+ memoise         2.0.1      2021-11-26 [1] CRAN (R 4.2.0)
+ mgcv          * 1.8-41     2022-10-21 [1] CRAN (R 4.2.0)
+ minqa           1.2.5      2022-10-19 [1] CRAN (R 4.2.0)
+ modeldata     * 1.0.1      2022-09-06 [1] CRAN (R 4.2.0)
+ munsell         0.5.0      2018-06-12 [1] CRAN (R 4.2.0)
+ nlme          * 3.1-160    2022-10-10 [1] CRAN (R 4.2.0)
+ nloptr          2.0.3      2022-05-26 [1] CRAN (R 4.2.0)
+ nnet            7.3-18     2022-09-28 [1] CRAN (R 4.2.0)
+ ongoal        * 0.0.4      2022-11-08 [1] Github (topepo/ongoal@8018a89)
+ parallelly    * 1.32.1     2022-07-21 [1] CRAN (R 4.2.0)
+ parsnip       * 1.0.3      2022-11-11 [1] CRAN (R 4.2.0)
+ pillar          1.8.1      2022-08-19 [1] CRAN (R 4.2.0)
+ pkgconfig       2.0.3      2019-09-22 [1] CRAN (R 4.2.0)
+ plotmo        * 3.6.2      2022-05-21 [1] CRAN (R 4.2.0)
+ plotrix       * 3.8-2      2021-09-08 [1] CRAN (R 4.2.0)
+ png             0.1-7      2013-12-03 [1] CRAN (R 4.2.0)
+ prodlim         2019.11.13 2019-11-17 [1] CRAN (R 4.2.0)
+ purrr         * 0.3.5      2022-10-06 [1] CRAN (R 4.2.0)
+ R6            * 2.5.1      2021-08-19 [1] CRAN (R 4.2.0)
+ Rcpp            1.0.9      2022-07-08 [1] CRAN (R 4.2.0)
+ recipes       * 1.0.3      2022-11-09 [1] CRAN (R 4.2.0)
+ reticulate      1.26       2022-08-31 [1] CRAN (R 4.2.0)
+ rlang           1.0.6      2022-09-24 [1] CRAN (R 4.2.0)
+ rpart           4.1.19     2022-10-21 [1] CRAN (R 4.2.0)
+ rsample       * 1.1.0      2022-08-08 [1] CRAN (R 4.2.0)
+ rstudioapi      0.14       2022-08-22 [1] CRAN (R 4.2.0)
+ scales        * 1.2.1      2022-08-20 [1] CRAN (R 4.2.0)
+ sessioninfo     1.2.2.9000 2022-10-11 [1] Github (r-lib/sessioninfo@d70760d)
+ shape           1.4.6      2021-05-19 [1] CRAN (R 4.2.0)
+ survival        3.4-0      2022-08-09 [1] CRAN (R 4.2.0)
+ TeachingDemos * 2.12       2020-04-07 [1] CRAN (R 4.2.0)
+ tensorflow      2.9.0      2022-05-21 [1] CRAN (R 4.2.0)
+ tfruns          1.5.1      2022-09-05 [1] CRAN (R 4.2.0)
+ tibble        * 3.1.8      2022-07-22 [1] CRAN (R 4.2.0)
+ tidymodels    * 1.0.0      2022-07-13 [1] CRAN (R 4.2.0)
+ tidyr         * 1.2.1      2022-09-08 [1] CRAN (R 4.2.0)
+ tidyselect      1.2.0      2022-10-10 [1] CRAN (R 4.2.0)
+ timechange      0.1.1      2022-11-04 [1] CRAN (R 4.2.0)
+ timeDate        4021.106   2022-09-30 [1] CRAN (R 4.2.0)
+ tune          * 1.0.1      2022-10-09 [1] CRAN (R 4.2.0)
+ utf8            1.2.2      2021-07-24 [1] CRAN (R 4.2.0)
+ uwot            0.1.14     2022-08-22 [1] CRAN (R 4.2.0)
+ vctrs           0.5.1      2022-11-16 [1] CRAN (R 4.2.0)
+ whisker         0.4        2019-08-28 [1] CRAN (R 4.2.0)
+ withr           2.5.0      2022-03-03 [1] CRAN (R 4.2.0)
+ workflows     * 1.1.2      2022-11-16 [1] CRAN (R 4.2.0)
+ workflowsets  * 1.0.0      2022-07-12 [1] CRAN (R 4.2.0)
+ yardstick     * 1.1.0      2022-09-07 [1] CRAN (R 4.2.0)
+ zeallot         0.1.0      2018-01-28 [1] CRAN (R 4.2.0)
+
+ [1] /Library/Frameworks/R.framework/Versions/4.2/Resources/library
+
+──────────────────────────────────────────────────────────────────────────────
+> 
+> q(save = "no")
+> proc.time()
+     user    system   elapsed 
+13776.100   228.450  1349.569 

@@ -1,0 +1,64 @@
+
+R version 4.2.0 (2022-04-22) -- "Vigorous Calisthenics"
+Copyright (C) 2022 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin17.0 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(tidymodels)
+── Attaching packages ────────────────────────────────────── tidymodels 1.0.0 ──
+✔ broom        1.0.1      ✔ recipes      1.0.3 
+✔ dials        1.1.0      ✔ rsample      1.1.0 
+✔ dplyr        1.0.10     ✔ tibble       3.1.8 
+✔ ggplot2      3.4.0      ✔ tidyr        1.2.1 
+✔ infer        1.0.3      ✔ tune         1.0.1 
+✔ modeldata    1.0.1      ✔ workflows    1.1.2 
+✔ parsnip      1.0.3      ✔ workflowsets 1.0.0 
+✔ purrr        0.3.5      ✔ yardstick    1.1.0 
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ purrr::discard() masks scales::discard()
+✖ dplyr::filter()  masks stats::filter()
+✖ dplyr::lag()     masks stats::lag()
+✖ recipes::step()  masks stats::step()
+• Dig deeper into tidy modeling with R at https://www.tmwr.org
+> library(stacks)
+> library(embed)
+> library(doMC)
+Loading required package: foreach
+
+Attaching package: ‘foreach’
+
+The following objects are masked from ‘package:purrr’:
+
+    accumulate, when
+
+Loading required package: iterators
+Loading required package: parallel
+> 
+> tidymodels_prefer()
+> options(pillar.advice = FALSE)
+> registerDoMC(cores = parallelly::availableCores())
+> 
+> recipe <- "normalize"
+> spec <- "nn"
+> dataset <- "nhl"
+> 
+> source("helpers.R")
+> 
+> wf_set <- read_as_workflow_set(file.path("example_analyses", dataset, "candidate_fits"))
+Error in get(gsub("\\.RData", "", basename(x))) : 
+  object 'nhl_bart' not found
+Calls: read_as_workflow_set -> lapply -> FUN -> get
+Execution halted

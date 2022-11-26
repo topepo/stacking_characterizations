@@ -1,0 +1,97 @@
+
+R version 4.2.0 (2022-04-22) -- "Vigorous Calisthenics"
+Copyright (C) 2022 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin17.0 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(tidymodels)
+── Attaching packages ────────────────────────────────────── tidymodels 1.0.0 ──
+✔ broom        1.0.1      ✔ recipes      1.0.3 
+✔ dials        1.1.0      ✔ rsample      1.1.0 
+✔ dplyr        1.0.10     ✔ tibble       3.1.8 
+✔ ggplot2      3.4.0      ✔ tidyr        1.2.1 
+✔ infer        1.0.3      ✔ tune         1.0.1 
+✔ modeldata    1.0.1      ✔ workflows    1.1.2 
+✔ parsnip      1.0.3      ✔ workflowsets 1.0.0 
+✔ purrr        0.3.5      ✔ yardstick    1.1.0 
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ purrr::discard() masks scales::discard()
+✖ dplyr::filter()  masks stats::filter()
+✖ dplyr::lag()     masks stats::lag()
+✖ recipes::step()  masks stats::step()
+• Use tidymodels_prefer() to resolve common conflicts.
+> library(stacks)
+> library(baguette)
+> library(embed)
+> library(doMC)
+Loading required package: foreach
+
+Attaching package: ‘foreach’
+
+The following objects are masked from ‘package:purrr’:
+
+    accumulate, when
+
+Loading required package: iterators
+Loading required package: parallel
+> 
+> tidymodels_prefer()
+> options(pillar.advice = FALSE)
+> registerDoMC(cores = parallelly::availableCores())
+> 
+> recipe <- "normalize"
+> spec <- "svm"
+> dataset <- "wind"
+> 
+> source("helpers.R")
+> 
+> wf_set <- read_as_workflow_set(file.path("example_analyses", dataset, "candidate_fits"))
+> 
+> load(file.path("example_analyses", dataset, paste0(dataset, "_data.RData")))
+> 
+>  
+> 
+> # add candidates to a data stack
+> data_stack <- 
++   stacks() %>%
++   add_candidates(wf_set)
+Error in `workflows::add_model()`:
+! parsnip could not locate an implementation for `cubist_rules` model
+  specifications using the `Cubist` engine.
+ℹ The parsnip extension package rules implements support for this
+  specification.
+ℹ Please install (if needed) and load to continue.
+Backtrace:
+     ▆
+  1. ├─stacks() %>% add_candidates(wf_set)
+  2. ├─stacks::add_candidates(., wf_set)
+  3. ├─stacks:::add_candidates.workflow_set(., wf_set)
+  4. │ └─purrr::reduce2(...)
+  5. │   └─purrr:::reduce2_impl(.x, .y, .f, ..., .init = .init, .left = TRUE)
+  6. │     ├─stacks (local) .f(out, .x[[x_i]], .y[[y_i]], ...)
+  7. │     └─stacks:::add_candidates.tune_results(...)
+  8. │       └─... %>% .set_data_candidates(candidates, name, col_name)
+  9. ├─stacks:::.set_data_candidates(., candidates, name, col_name)
+ 10. ├─stacks:::.set_model_defs_candidates(., candidates, name)
+ 11. │ └─attr(candidates, "workflow") %>% stack_workflow()
+ 12. ├─stacks:::stack_workflow(.)
+ 13. │ └─workflows::workflow() %>% ...
+ 14. └─workflows::add_model(., workflows::extract_spec_parsnip(x))
+ 15.   └─workflows:::new_action_model(spec, formula)
+ 16.     └─parsnip::prompt_missing_implementation(...)
+ 17.       └─cli (local) prompt(c(msg, ""), ...)
+ 18.         └─rlang::abort(...)
+Execution halted
