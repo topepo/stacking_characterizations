@@ -32,7 +32,7 @@ Type 'q()' to quit R.
 ✖ dplyr::filter()  masks stats::filter()
 ✖ dplyr::lag()     masks stats::lag()
 ✖ recipes::step()  masks stats::step()
-• Use suppressPackageStartupMessages() to eliminate package startup messages
+• Dig deeper into tidy modeling with R at https://www.tmwr.org
 > library(stacks)
 > library(baguette)
 > library(embed)

@@ -32,7 +32,7 @@ Type 'q()' to quit R.
 ✖ dplyr::filter()  masks stats::filter()
 ✖ dplyr::lag()     masks stats::lag()
 ✖ recipes::step()  masks stats::step()
-• Learn how to get started at https://www.tidymodels.org/start/
+• Use suppressPackageStartupMessages() to eliminate package startup messages
 > library(rules)
 
 Attaching package: ‘rules’
@@ -126,9 +126,7 @@ The `...` are not used in this function but one or more arguments were passed: '
 +   res, 
 +   file = file.path("metrics", paste0(dataset, "_", recipe, "_", spec, ".RData"))
 + )
-Error in gzfile(file, "wb") : cannot open the connection
-Calls: save -> gzfile
-In addition: Warning message:
-In gzfile(file, "wb") :
-  cannot open compressed file 'metrics/barley_normalize_bt.RData', probable reason 'No such file or directory'
-Execution halted
+> 
+> proc.time()
+   user  system elapsed 
+ 79.536  10.481  64.656 
