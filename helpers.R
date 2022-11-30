@@ -5,13 +5,35 @@ get_object <- function(x) {
   env[[nm]]
 }
 
+# takes a set of tuning results and enframes them as a row of a workflow set
+enframe_as_wfs <- function(tuning_res) {
+  res <-
+    tibble::tibble(
+      wflow_id = recipes::rand_id("res"),
+      info = NA,
+      option = NA,
+      result = list(tuning_res)
+    )
+  
+  structure(res, class = c("workflow_set", class(res)))
+}
+
 # given a directory, read each workflow set row in the folder, row-bind together
 read_as_workflow_set <- function(dir) {
   wflow_files <- list.files(dir, full.names = TRUE)
   
   wflow_rows <- lapply(wflow_files, get_object)
 
-  dplyr::bind_rows(wflow_rows)
+  if (!inherits(wflow_rows[[1]], "workflow_set")) {
+    wflow_rows <- lapply(wflow_rows, enframe_as_wfs)
+  }
+  
+  res <- dplyr::bind_rows(wflow_rows)
+  
+  structure(
+    res,
+    class = class(wflow_rows[[1]])
+  )
 }
 
 
