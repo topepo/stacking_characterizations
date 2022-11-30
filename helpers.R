@@ -42,5 +42,9 @@ add_members <- function(model_stack, dataset) {
   model_stack
 }
 
-
-
+# load needed parsnip + recipes extension packages
+library(baguette)
+library(rules)
+library(bonsai)
+library(embed)
+library(discrim)
