@@ -1,7 +1,8 @@
 # given a .RData filepath, load the object at that path and return as object
 get_object <- function(x) {
-  load(x)
-  get(gsub("\\.RData", "", basename(x)))
+  env <- new.env()
+  nm <- load(f, env)[1]
+  env[[nm]]
 }
 
 # given a directory, read each workflow set row in the folder, row-bind together
