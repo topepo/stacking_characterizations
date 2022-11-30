@@ -1,7 +1,7 @@
 # given a .RData filepath, load the object at that path and return as object
 get_object <- function(x) {
   env <- new.env()
-  nm <- load(f, env)[1]
+  nm <- load(x, env)[1]
   env[[nm]]
 }
 
