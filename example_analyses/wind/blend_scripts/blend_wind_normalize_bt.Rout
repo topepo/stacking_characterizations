@@ -19,20 +19,20 @@ Type 'q()' to quit R.
 
 > library(tidymodels)
 ── Attaching packages ────────────────────────────────────── tidymodels 1.0.0 ──
-✔ broom        1.0.1      ✔ recipes      1.0.3 
-✔ dials        1.1.0      ✔ rsample      1.1.0 
-✔ dplyr        1.0.10     ✔ tibble       3.1.8 
-✔ ggplot2      3.4.0      ✔ tidyr        1.2.1 
-✔ infer        1.0.3      ✔ tune         1.0.1 
-✔ modeldata    1.0.1      ✔ workflows    1.1.2 
-✔ parsnip      1.0.3      ✔ workflowsets 1.0.0 
-✔ purrr        0.3.5      ✔ yardstick    1.1.0 
+✔ broom        1.0.1          ✔ recipes      1.0.3     
+✔ dials        1.1.0          ✔ rsample      1.1.0     
+✔ dplyr        1.0.10         ✔ tibble       3.1.8     
+✔ ggplot2      3.4.0          ✔ tidyr        1.2.1     
+✔ infer        1.0.3          ✔ tune         1.0.1     
+✔ modeldata    1.0.1          ✔ workflows    1.1.2     
+✔ parsnip      1.0.3          ✔ workflowsets 1.0.0     
+✔ purrr        0.3.5          ✔ yardstick    1.1.0.9000
 ── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
 ✖ purrr::discard() masks scales::discard()
 ✖ dplyr::filter()  masks stats::filter()
 ✖ dplyr::lag()     masks stats::lag()
 ✖ recipes::step()  masks stats::step()
-• Dig deeper into tidy modeling with R at https://www.tmwr.org
+• Search for functions across packages at https://www.tidymodels.org/find/
 > library(stacks)
 > library(baguette)
 > library(embed)
@@ -68,30 +68,33 @@ Loading required package: parallel
 > data_stack <- 
 +   stacks() %>%
 +   add_candidates(wf_set)
-Error in `workflows::add_model()`:
-! parsnip could not locate an implementation for `cubist_rules` model
-  specifications using the `Cubist` engine.
-ℹ The parsnip extension package rules implements support for this
-  specification.
-ℹ Please install (if needed) and load to continue.
-Backtrace:
-     ▆
-  1. ├─stacks() %>% add_candidates(wf_set)
-  2. ├─stacks::add_candidates(., wf_set)
-  3. ├─stacks:::add_candidates.workflow_set(., wf_set)
-  4. │ └─purrr::reduce2(...)
-  5. │   └─purrr:::reduce2_impl(.x, .y, .f, ..., .init = .init, .left = TRUE)
-  6. │     ├─stacks (local) .f(out, .x[[x_i]], .y[[y_i]], ...)
-  7. │     └─stacks:::add_candidates.tune_results(...)
-  8. │       └─... %>% .set_data_candidates(candidates, name, col_name)
-  9. ├─stacks:::.set_data_candidates(., candidates, name, col_name)
- 10. ├─stacks:::.set_model_defs_candidates(., candidates, name)
- 11. │ └─attr(candidates, "workflow") %>% stack_workflow()
- 12. ├─stacks:::stack_workflow(.)
- 13. │ └─workflows::workflow() %>% ...
- 14. └─workflows::add_model(., workflows::extract_spec_parsnip(x))
- 15.   └─workflows:::new_action_model(spec, formula)
- 16.     └─parsnip::prompt_missing_implementation(...)
- 17.       └─cli (local) prompt(c(msg, ""), ...)
- 18.         └─rlang::abort(...)
+Warning message:
+The inputted `candidates` argument `plain_mars` generated notes during tuning/resampling. Model stacking may fail due to these issues; see `?collect_notes` if so. 
+> 
+> # define meta-learner
+> source(file.path("meta_learners", "specs", paste0("make_spec_", spec, ".R")))
+> source(file.path("meta_learners", "recipes", paste0("make_recipe_", recipe, ".R")))
+> 
+> meta_learner <- 
++   workflow() %>%
++   add_model(make_spec()) %>%
++   add_recipe(make_recipe(as.formula(paste0(attr(data_stack, "outcome"), ' ~ .')), data_stack))
+> 
+> # record time-to-fit for meta-learner fitting
+> timing <- system.time({
++   set.seed(1)
++   model_stack <-
++     data_stack %>%
++     blend_predictions(meta_learner = meta_learner)
++ })
+Warning message:
+The `...` are not used in this function but one or more arguments were passed: 'meta_learner' 
+> 
+> model_stack_fitted <-
++   add_members(model_stack, dataset)
+Error in readChar(con, 5L, useBytes = TRUE) : cannot open the connection
+Calls: add_members -> lapply -> FUN -> load -> readChar
+In addition: Warning message:
+In readChar(con, 5L, useBytes = TRUE) :
+  cannot open compressed file 'example_analyses/wind/member_fits/indicators_nearest_neighbor_1_14.RData', probable reason 'No such file or directory'
 Execution halted

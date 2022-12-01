@@ -19,14 +19,14 @@ Type 'q()' to quit R.
 
 > library(tidymodels)
 ── Attaching packages ────────────────────────────────────── tidymodels 1.0.0 ──
-✔ broom        1.0.1      ✔ recipes      1.0.3 
-✔ dials        1.1.0      ✔ rsample      1.1.0 
-✔ dplyr        1.0.10     ✔ tibble       3.1.8 
-✔ ggplot2      3.4.0      ✔ tidyr        1.2.1 
-✔ infer        1.0.3      ✔ tune         1.0.1 
-✔ modeldata    1.0.1      ✔ workflows    1.1.2 
-✔ parsnip      1.0.3      ✔ workflowsets 1.0.0 
-✔ purrr        0.3.5      ✔ yardstick    1.1.0 
+✔ broom        1.0.1          ✔ recipes      1.0.3     
+✔ dials        1.1.0          ✔ rsample      1.1.0     
+✔ dplyr        1.0.10         ✔ tibble       3.1.8     
+✔ ggplot2      3.4.0          ✔ tidyr        1.2.1     
+✔ infer        1.0.3          ✔ tune         1.0.1     
+✔ modeldata    1.0.1          ✔ workflows    1.1.2     
+✔ parsnip      1.0.3          ✔ workflowsets 1.0.0     
+✔ purrr        0.3.5          ✔ yardstick    1.1.0.9000
 ── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
 ✖ purrr::discard() masks scales::discard()
 ✖ dplyr::filter()  masks stats::filter()
@@ -58,7 +58,68 @@ Loading required package: parallel
 > source("helpers.R")
 > 
 > wf_set <- read_as_workflow_set(file.path("example_analyses", dataset, "candidate_fits"))
-Error in get(gsub("\\.RData", "", basename(x))) : 
-  object 'hpc_cart_bag' not found
-Calls: read_as_workflow_set -> lapply -> FUN -> get
+> 
+> load(file.path("example_analyses", dataset, paste0(dataset, "_data.RData")))
+> 
+>  
+> 
+> # add candidates to a data stack
+> data_stack <- 
++   stacks() %>%
++   add_candidates(wf_set)
+Warning message:
+Predictions from 60 candidates were identical to those from existing candidates and were removed from the data stack. 
+> 
+> # define meta-learner
+> source(file.path("meta_learners", "specs", paste0("make_spec_", spec, ".R")))
+> source(file.path("meta_learners", "recipes", paste0("make_recipe_", recipe, ".R")))
+> 
+> meta_learner <- 
++   workflow() %>%
++   add_model(make_spec()) %>%
++   add_recipe(make_recipe(as.formula(paste0(attr(data_stack, "outcome"), ' ~ .')), data_stack))
+> 
+> # record time-to-fit for meta-learner fitting
+> timing <- system.time({
++   set.seed(1)
++   model_stack <-
++     data_stack %>%
++     blend_predictions(meta_learner = meta_learner)
++ })
+! Bootstrap03: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -51); Convergence for 51th lambda value...
+! Bootstrap01: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -50); Convergence for 50th lambda value...
+! Bootstrap20: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -51); Convergence for 51th lambda value...
+! Bootstrap09: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -49); Convergence for 49th lambda value...
+! Bootstrap11: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -50); Convergence for 50th lambda value...
+! Bootstrap19: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -53); Convergence for 53th lambda value...
+! Bootstrap06: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -50); Convergence for 50th lambda value...
+! Bootstrap13: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -51); Convergence for 51th lambda value...
+! Bootstrap12: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -50); Convergence for 50th lambda value...
+! Bootstrap08: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -52); Convergence for 52th lambda value...
+! Bootstrap14: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -51); Convergence for 51th lambda value...
+! Bootstrap05: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -51); Convergence for 51th lambda value...
+! Bootstrap18: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -52); Convergence for 52th lambda value...
+! Bootstrap02: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -51); Convergence for 51th lambda value...
+! Bootstrap04: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -51); Convergence for 51th lambda value...
+! Bootstrap17: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -51); Convergence for 51th lambda value...
+! Bootstrap15: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -51); Convergence for 51th lambda value...
+! Bootstrap07: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -51); Convergence for 51th lambda value...
+! Bootstrap16: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -51); Convergence for 51th lambda value...
+! Bootstrap10: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -54); Convergence for 54th lambda value...
+! Bootstrap21: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -50); Convergence for 50th lambda value...
+! Bootstrap23: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -51); Convergence for 51th lambda value...
+! Bootstrap25: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -50); Convergence for 50th lambda value...
+! Bootstrap24: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -50); Convergence for 50th lambda value...
+! Bootstrap22: preprocessor 1/1, model 1/1: from glmnet C++ code (error code -52); Convergence for 52th lambda value...
+Warning messages:
+1: The `...` are not used in this function but one or more arguments were passed: 'meta_learner' 
+2: from glmnet C++ code (error code -55); Convergence for 55th lambda value not reached after maxit=100000 iterations; solutions for larger lambdas returned 
+> 
+> model_stack_fitted <-
++   add_members(model_stack, dataset)
+Error in readChar(con, 5L, useBytes = TRUE) : cannot open the connection
+Calls: add_members -> lapply -> FUN -> load -> readChar
+In addition: Warning message:
+In readChar(con, 5L, useBytes = TRUE) :
+  cannot open compressed file 'example_analyses/hpc/member_fits/.pred_F_res_DHHso_1_24.RData', probable reason 'No such file or directory'
 Execution halted

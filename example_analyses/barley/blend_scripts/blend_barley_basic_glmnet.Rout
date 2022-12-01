@@ -19,20 +19,20 @@ Type 'q()' to quit R.
 
 > library(tidymodels)
 ── Attaching packages ────────────────────────────────────── tidymodels 1.0.0 ──
-✔ broom        1.0.1      ✔ recipes      1.0.3 
-✔ dials        1.1.0      ✔ rsample      1.1.0 
-✔ dplyr        1.0.10     ✔ tibble       3.1.8 
-✔ ggplot2      3.4.0      ✔ tidyr        1.2.1 
-✔ infer        1.0.3      ✔ tune         1.0.1 
-✔ modeldata    1.0.1      ✔ workflows    1.1.2 
-✔ parsnip      1.0.3      ✔ workflowsets 1.0.0 
-✔ purrr        0.3.5      ✔ yardstick    1.1.0 
+✔ broom        1.0.1          ✔ recipes      1.0.3     
+✔ dials        1.1.0          ✔ rsample      1.1.0     
+✔ dplyr        1.0.10         ✔ tibble       3.1.8     
+✔ ggplot2      3.4.0          ✔ tidyr        1.2.1     
+✔ infer        1.0.3          ✔ tune         1.0.1     
+✔ modeldata    1.0.1          ✔ workflows    1.1.2     
+✔ parsnip      1.0.3          ✔ workflowsets 1.0.0     
+✔ purrr        0.3.5          ✔ yardstick    1.1.0.9000
 ── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
 ✖ purrr::discard() masks scales::discard()
 ✖ dplyr::filter()  masks stats::filter()
 ✖ dplyr::lag()     masks stats::lag()
 ✖ recipes::step()  masks stats::step()
-• Dig deeper into tidy modeling with R at https://www.tmwr.org
+• Use tidymodels_prefer() to resolve common conflicts.
 > library(rules)
 
 Attaching package: ‘rules’
@@ -118,4 +118,4 @@ Warning messages:
 > 
 > proc.time()
    user  system elapsed 
- 78.566  10.248  63.608 
+ 79.803  10.173  65.337 
