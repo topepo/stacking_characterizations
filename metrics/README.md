@@ -1,0 +1,1 @@
+The top-level folder `metrics` contains the "output" from each of these experiments, a six-element list with the dataset name, preprocessor and model specification for the meta-learner, time to fit, test set performance metric, and metric value. The files are named in the format `dataset_preproc_model.RData`.
