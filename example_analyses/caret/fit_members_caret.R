@@ -20,7 +20,7 @@ caret_data_stack <-
 set.seed(1)
 caret_model_stack <-
   caret_data_stack %>%
-  blend_predictions(times = 3, meta_learner = linear_reg()) %>%
+  blend_predictions(times = 3, meta_learner = logistic_reg()) %>%
   fit_members()
 
 # dbarts::bart doesn't have a butcher method, and this element
