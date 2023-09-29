@@ -66,8 +66,18 @@ add_members <- function(model_stack, dataset) {
 }
 
 # load needed parsnip + recipes extension packages
+library(tidymodels)
 library(baguette)
 library(rules)
 library(bonsai)
 library(embed)
 library(discrim)
+library(doMC)
+library(parallelly)
+
+# ------------------------------------------------------------------------------
+
+tidymodels_prefer()
+theme_set(theme_bw())
+options(pillar.advice = FALSE)
+registerDoMC(cores = availableCores())
