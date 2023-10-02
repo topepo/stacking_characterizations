@@ -49,3 +49,5 @@ for (i in seq_along(caret_member_fits)) {
   assign(obj_nm, value = caret_member_fits[[i]])
   save(list = obj_nm, file = file_nm, compress = "xz", compression_level = 9)
 }
+
+print("All done!")
